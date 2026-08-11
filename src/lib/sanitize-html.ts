@@ -1,33 +1,27 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 
-const ALLOWED_TAGS = [
-  "p",
-  "br",
-  "strong",
-  "b",
-  "em",
-  "i",
-  "u",
-  "ul",
-  "ol",
-  "li",
-  "a",
-  "img",
-  "h1",
-  "h2",
-  "h3",
-  "span",
-  "blockquote",
-];
+export function sanitizeRichText(html: string | null | undefined): string {
+  if (!html) {
+    return "";
+  }
 
-const ALLOWED_ATTR = ["href", "target", "rel", "class", "src", "alt", "title"];
-
-export function sanitizeRichText(html: string) {
-  const clean = DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
-    FORBID_TAGS: ["script", "iframe", "object", "embed", "form"],
-    FORBID_ATTR: ["onerror", "onclick", "onload", "style"],
+  const clean = sanitizeHtml(html, {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+      "img",
+      "iframe",
+      "h1",
+      "h2",
+      "u",
+      "s",
+    ]),
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      "*": ["style", "class", "id"],
+      img: ["src", "alt", "width", "height", "title"],
+      iframe: ["src", "allowfullscreen", "frameborder", "allow", "title"],
+      a: ["href", "name", "target", "rel"],
+    },
+    allowedIframeHostnames: ["www.youtube.com", "player.vimeo.com"],
   });
 
   return clean.replace(/&nbsp;/gi, " ").replace(/\u00A0/g, " ");
@@ -38,8 +32,9 @@ export function isRichTextEmpty(html: string) {
     return false;
   }
 
-  const text = DOMPurify.sanitize(html, { ALLOWED_TAGS: [] })
+  const text = sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} })
     .replace(/&nbsp;/g, " ")
+    .replace(/\u00A0/g, " ")
     .trim();
 
   return text.length === 0;
