@@ -28,6 +28,7 @@ function apiRemotePatterns(): NonNullable<
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  serverExternalPackages: ["jsdom"],
   images: {
     dangerouslyAllowLocalIP: true,
     remotePatterns: [
