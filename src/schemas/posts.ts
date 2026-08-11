@@ -1,0 +1,443 @@
+import { z } from "zod";
+
+import { datetimeLocalToIsoWithOffset } from "@/lib/format";
+import { isRichTextEmpty } from "@/lib/sanitize-html";
+
+export const postTypeSchema = z.enum([
+  "PROJECT",
+  "NEWS",
+  "DOCUMENT",
+  "BOOKLET",
+  "ARTICLE",
+  "REPORT",
+]);
+export const postStatusSchema = z.enum(["DRAFT", "PUBLISHED", "SCHEDULED"]);
+export const executionStatusSchema = z.enum([
+  "PLANNED",
+  "ONGOING",
+  "COMPLETED",
+]);
+
+const stringListSchema = z
+  .array(z.string())
+  .nullable()
+  .optional()
+  .transform((value) => value?.filter(Boolean) ?? []);
+
+export const projectDetailsSchema = z
+  .object({
+    generalObjective: z.string().min(1, "Informe o objetivo geral"),
+    startDate: z.string().optional().nullable(),
+    endDate: z.string().optional().nullable(),
+    durationText: z.string().optional().nullable(),
+    budgetValue: z.coerce
+      .number({ error: "Informe o valor do orçamento" })
+      .nonnegative("O orçamento não pode ser negativo"),
+    executionStatus: executionStatusSchema,
+    funderName: z.string().optional().nullable(),
+    funder: z
+      .object({
+        id: z.union([z.string(), z.number()]).transform(String),
+        name: z.string(),
+      })
+      .nullable()
+      .optional(),
+  })
+  .passthrough();
+
+export const postAuthorSchema = z
+  .object({
+    id: z.union([z.string(), z.number()]).transform(String),
+    name: z.string(),
+    email: z
+      .union([z.string(), z.null(), z.undefined()])
+      .transform((value) => value ?? ""),
+  })
+  .passthrough();
+
+export const postSchema = z
+  .object({
+    id: z.union([z.string(), z.number()]).transform(String),
+    title: z.string(),
+    slug: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((value) => value ?? ""),
+    type: postTypeSchema,
+    status: postStatusSchema,
+    summary: z.string().nullable().optional(),
+    coverImageUrl: z.string().nullable().optional(),
+    richTextContent: z.string().nullable().optional(),
+    galleryImages: stringListSchema,
+    gallery_images: stringListSchema,
+    attachmentUrls: stringListSchema,
+    attachment_urls: stringListSchema,
+    attachmentUrl: z.string().nullable().optional(),
+    projectDetails: projectDetailsSchema.nullable().optional(),
+    project_details: projectDetailsSchema.nullable().optional(),
+    authorId: z
+      .union([z.string(), z.number()])
+      .transform(String)
+      .optional(),
+    author_id: z
+      .union([z.string(), z.number()])
+      .transform(String)
+      .optional(),
+    authorName: z.string().nullable().optional(),
+    author: postAuthorSchema.nullable().optional(),
+    coAuthors: z.array(postAuthorSchema).nullable().optional(),
+    co_authors: z.array(postAuthorSchema).nullable().optional(),
+    createdAt: z.string().nullable().optional(),
+    created_at: z.string().nullable().optional(),
+    publishedAt: z.string().nullable().optional(),
+    published_at: z.string().nullable().optional(),
+    updatedAt: z.string().nullable().optional(),
+    updated_at: z.string().nullable().optional(),
+  })
+  .transform((post) => {
+    const authorId =
+      post.authorId || post.author_id || post.author?.id || "";
+    const galleryImages =
+      post.galleryImages.length > 0
+        ? post.galleryImages
+        : post.gallery_images;
+    const attachmentUrls =
+      post.attachmentUrls.length > 0
+        ? post.attachmentUrls
+        : post.attachment_urls.length > 0
+          ? post.attachment_urls
+          : post.attachmentUrl?.trim()
+            ? [post.attachmentUrl]
+            : [];
+    const coAuthors = post.coAuthors ?? post.co_authors ?? [];
+
+    return {
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      type: post.type,
+      status: post.status,
+      summary: post.summary ?? "",
+      coverImageUrl: post.coverImageUrl ?? "",
+      richTextContent: post.richTextContent ?? "",
+      galleryImages,
+      attachmentUrls,
+      projectDetails: post.projectDetails ?? post.project_details ?? null,
+      author: post.author
+        ? {
+            id: post.author.id,
+            name: post.author.name,
+            email: post.author.email,
+          }
+        : authorId
+          ? {
+              id: authorId,
+              name: post.authorName || "—",
+              email: "",
+            }
+          : null,
+      coAuthors: coAuthors.map((author) => ({
+        id: author.id,
+        name: author.name,
+        email: author.email,
+      })),
+      authorId,
+      authorName: post.authorName || post.author?.name || "—",
+      createdAt: post.createdAt || post.created_at || null,
+      publishedAt: post.publishedAt || post.published_at || null,
+      updatedAt: post.updatedAt || post.updated_at || null,
+    };
+  });
+
+export const postsPageSchema = z.object({
+  content: z.array(postSchema),
+  first: z.boolean().optional().default(true),
+  last: z.boolean().optional().default(true),
+  totalPages: z.number().optional().default(1),
+  totalElements: z.number().optional().default(0),
+  number: z.number().optional().default(0),
+  size: z.number().optional().default(10),
+  empty: z.boolean().optional(),
+});
+
+export const postsListResponseSchema = z.union([
+  z.array(postSchema),
+  postsPageSchema,
+  z.object({ data: z.array(postSchema) }),
+  z.object({ posts: z.array(postSchema) }),
+]);
+
+export const postFormSchema = z
+  .object({
+    type: postTypeSchema,
+    title: z.string().min(1, "Informe o título"),
+    summary: z.string().optional(),
+    coverImageUrl: z.string().optional(),
+    richTextContent: z.string().min(1, "Informe o conteúdo"),
+    status: postStatusSchema,
+    manualPublishedAt: z.boolean(),
+    publishedAt: z.string().optional(),
+    galleryImages: z.array(z.string()),
+    attachmentUrls: z.array(z.string()),
+    coAuthorIds: z.array(z.string()),
+    projectDetails: z
+      .object({
+        generalObjective: z.string().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        budgetValue: z.union([z.number(), z.nan()]).optional(),
+        executionStatus: executionStatusSchema.optional(),
+      })
+      .optional(),
+  })
+  .superRefine((values, ctx) => {
+    if (isRichTextEmpty(values.richTextContent)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["richTextContent"],
+        message: "Informe o conteúdo",
+      });
+    }
+
+    if (values.type !== "PROJECT") {
+      const requiresPublishedAt =
+        values.status === "SCHEDULED" || values.manualPublishedAt;
+
+      if (requiresPublishedAt && !values.publishedAt?.trim()) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["publishedAt"],
+          message: "Informe a data de publicação",
+        });
+      }
+    }
+
+    if (values.type === "PROJECT") {
+      const details = values.projectDetails;
+
+      if (!details?.generalObjective?.trim()) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["projectDetails", "generalObjective"],
+          message: "Informe o objetivo geral",
+        });
+      }
+
+      if (
+        details?.budgetValue === undefined ||
+        Number.isNaN(details.budgetValue) ||
+        details.budgetValue < 0
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["projectDetails", "budgetValue"],
+          message: "Informe um orçamento válido",
+        });
+      }
+
+      if (!details?.executionStatus) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["projectDetails", "executionStatus"],
+          message: "Selecione o status de execução",
+        });
+      }
+
+      if (details?.startDate && details?.endDate) {
+        const start = new Date(`${details.startDate}T00:00:00`);
+        const end = new Date(`${details.endDate}T00:00:00`);
+
+        if (
+          !Number.isNaN(start.getTime()) &&
+          !Number.isNaN(end.getTime()) &&
+          end.getTime() < start.getTime()
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["projectDetails", "endDate"],
+            message: "A data de fim deve ser posterior ou igual à de início",
+          });
+        }
+      }
+    }
+  });
+
+export type PostType = z.infer<typeof postTypeSchema>;
+export type PostStatus = z.infer<typeof postStatusSchema>;
+export type ExecutionStatus = z.infer<typeof executionStatusSchema>;
+export type ProjectDetails = z.infer<typeof projectDetailsSchema>;
+export type PostAuthor = z.infer<typeof postAuthorSchema>;
+export type PostFormValues = z.infer<typeof postFormSchema>;
+export type AdminPost = z.infer<typeof postSchema>;
+export type PostsPage = z.infer<typeof postsPageSchema>;
+
+export function parsePostsList(payload: unknown): AdminPost[] {
+  return parsePostsPage(payload).content;
+}
+
+export function parsePostsPage(payload: unknown): PostsPage {
+  if (Array.isArray(payload)) {
+    const content = z.array(postSchema).parse(payload);
+    return {
+      content,
+      first: true,
+      last: true,
+      totalPages: 1,
+      totalElements: content.length,
+      number: 0,
+      size: content.length || 10,
+    };
+  }
+
+  const pageResult = postsPageSchema.safeParse(payload);
+  if (pageResult.success) {
+    return pageResult.data;
+  }
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "data" in payload &&
+    Array.isArray((payload as { data: unknown }).data)
+  ) {
+    const content = z.array(postSchema).parse((payload as { data: unknown }).data);
+    return {
+      content,
+      first: true,
+      last: true,
+      totalPages: 1,
+      totalElements: content.length,
+      number: 0,
+      size: content.length || 10,
+    };
+  }
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "posts" in payload &&
+    Array.isArray((payload as { posts: unknown }).posts)
+  ) {
+    const content = z
+      .array(postSchema)
+      .parse((payload as { posts: unknown }).posts);
+    return {
+      content,
+      first: true,
+      last: true,
+      totalPages: 1,
+      totalElements: content.length,
+      number: 0,
+      size: content.length || 10,
+    };
+  }
+
+  return postsPageSchema.parse(payload);
+}
+
+export function parsePost(payload: unknown): AdminPost {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "data" in payload &&
+    (payload as { data: unknown }).data
+  ) {
+    return postSchema.parse((payload as { data: unknown }).data);
+  }
+
+  return postSchema.parse(payload);
+}
+
+export function toPostSubmitPayload(values: PostFormValues) {
+  const galleryImages = (values.galleryImages ?? []).filter(Boolean);
+  const attachmentUrls = (values.attachmentUrls ?? []).filter(Boolean);
+  const coAuthorIds = (values.coAuthorIds ?? []).filter(Boolean);
+
+  const base = {
+    type: values.type,
+    title: values.title,
+    summary: values.summary?.trim() || undefined,
+    coverImageUrl: values.coverImageUrl?.trim() || undefined,
+    richTextContent: values.richTextContent,
+    status: values.status,
+    galleryImages,
+    attachmentUrls,
+    coAuthorIds,
+  };
+
+  if (values.type === "PROJECT") {
+    const budgetValue = Number(values.projectDetails?.budgetValue);
+    const startDate = values.projectDetails?.startDate?.trim();
+    const endDate = values.projectDetails?.endDate?.trim();
+
+    return {
+      ...base,
+      projectDetails: {
+        generalObjective: values.projectDetails?.generalObjective?.trim() ?? "",
+        ...(startDate ? { startDate } : {}),
+        ...(endDate ? { endDate } : {}),
+        budgetValue,
+        executionStatus:
+          values.status === "SCHEDULED"
+            ? "PLANNED"
+            : (values.projectDetails?.executionStatus ?? "ONGOING"),
+      },
+    };
+  }
+
+  const shouldSendPublishedAt =
+    values.status === "SCHEDULED" || values.manualPublishedAt;
+
+  return {
+    ...base,
+    publishedAt: shouldSendPublishedAt
+      ? datetimeLocalToIsoWithOffset(values.publishedAt)
+      : null,
+    projectDetails: undefined,
+  };
+}
+
+export type PostSubmitPayload = ReturnType<typeof toPostSubmitPayload>;
+
+export const postTypeLabels: Record<PostType, string> = {
+  PROJECT: "Projeto",
+  NEWS: "Notícia",
+  DOCUMENT: "Documento",
+  BOOKLET: "Cartilha",
+  ARTICLE: "Artigo",
+  REPORT: "Relatório",
+};
+
+export const postStatusLabels: Record<PostStatus, string> = {
+  DRAFT: "Rascunho",
+  PUBLISHED: "Publicado",
+  SCHEDULED: "Agendado",
+};
+
+export const executionStatusLabels: Record<ExecutionStatus, string> = {
+  PLANNED: "Planejado",
+  ONGOING: "Em andamento",
+  COMPLETED: "Concluído",
+};
+
+export const postTypeSelectItems = [
+  { value: "PROJECT" as const, label: postTypeLabels.PROJECT },
+  { value: "NEWS" as const, label: postTypeLabels.NEWS },
+  { value: "DOCUMENT" as const, label: postTypeLabels.DOCUMENT },
+  { value: "BOOKLET" as const, label: postTypeLabels.BOOKLET },
+  { value: "ARTICLE" as const, label: postTypeLabels.ARTICLE },
+  { value: "REPORT" as const, label: postTypeLabels.REPORT },
+];
+
+export const postStatusSelectItems = [
+  { value: "DRAFT" as const, label: postStatusLabels.DRAFT },
+  { value: "PUBLISHED" as const, label: postStatusLabels.PUBLISHED },
+  { value: "SCHEDULED" as const, label: postStatusLabels.SCHEDULED },
+];
+
+export const executionStatusSelectItems = [
+  { value: "PLANNED" as const, label: executionStatusLabels.PLANNED },
+  { value: "ONGOING" as const, label: executionStatusLabels.ONGOING },
+  { value: "COMPLETED" as const, label: executionStatusLabels.COMPLETED },
+];

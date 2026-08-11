@@ -1,0 +1,33 @@
+---
+description: Arquitetura Frontend Padrão (Next.js, Tailwind CSS, Zod, React Query)
+alwaysApply: true
+---
+# Diretrizes Arquiteturais Frontend - Portal & CMS
+
+Esta é a única fonte de verdade para a geração de código. O projeto é dividido em dois ecossistemas dentro do Next.js: `(public)` para a Vitrine (SSG/ISR) e `(admin)` para o Painel (CSR).
+
+## [MANDATÓRIO] Estrutura e Workflow
+1. **Separação de Renderização:** 
+   - `app/(public)` (Vitrine): Foco em SEO, utilizando Server Components e `fetch` nativo com revalidação (ISR/SSG).
+   - `app/(admin)` (Painel): Client Components (`"use client"`), consumindo a API via `TanStack Query` (ou SWR) protegido por JWT.
+2. **Schema-First (Zod):** Toda *feature* inicia pela definição do Schema Zod em `src/schemas/`.
+3. **Fronteira de Dados e UI:** Estilize exclusivamente com Tailwind CSS e utilize os componentes base do `shadcn/ui` gerados pelo v0 (em `components/ui`).
+4. **Formulários:** Utilize `react-hook-form` com `zodResolver`.
+5. **URL como Estado (Painel):** Filtros e paginação no painel devem refletir na URL (Search Params).
+6. **Resiliência de Sessão (Refresh Token):** O cliente HTTP (`axios` ou wrapper de `fetch` em `lib/api.ts`) DEVE ter um interceptor que, ao receber `401`, chama silenciosamente a rota `/admin/auth/refresh-token` e refaz a requisição original.
+7. **Controle de Acesso (RBAC):** A UI do painel deve ocultar menus e botões baseando-se na `role` do usuário logado (`ADMIN`, `EDITOR`, `CONTRIBUTOR`) e no `author_id` dos posts.
+
+## [PROIBIDO] Práticas Vetadas
+1. **PROIBIDO** utilizar `useEffect` para fetch em páginas públicas. Use Server Components.
+2. **PROIBIDO** acoplar regras de negócio em componentes visuais.
+3. **PROIBIDO** utilizar `useState` para paginação/busca. Use a URL.
+4. **PROIBIDO** armazenar o token JWT no `localStorage`. Utilize Cookies para permitir validação via Middleware.
+
+## 🛠️ Fetching Público (SSG/ISR - Server Component)
+```tsx
+async function getProjects() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/posts?type=PROJECT`, { 
+    next: { tags: ['posts'] } // Tag para revalidação via Webhook
+  });
+  return res.json();
+}
