@@ -20,7 +20,6 @@ import {
   getInstitutionalPagePath,
   MENU_GROUP_LABELS,
   type InstitutionalPageMenuItem,
-  type MenuGroup,
 } from "@/schemas/institutional-pages";
 
 const staticLinks = [
@@ -31,27 +30,59 @@ const staticLinks = [
   { label: "Publicações", href: "/publicacoes" },
 ];
 
-type SiteHeaderProps = {
-  menuItems?: InstitutionalPageMenuItem[];
+export type HeaderMenuItem = {
+  id: string;
+  title: string;
+  href: string;
+  menuGroup: "SAR" | "TRANSPARENCIA";
 };
 
-function groupMenuItems(items: InstitutionalPageMenuItem[]) {
-  return {
-    SAR: items.filter((item) => item.menuGroup === "SAR"),
-    TRANSPARENCIA: items.filter((item) => item.menuGroup === "TRANSPARENCIA"),
-  } satisfies Record<MenuGroup, InstitutionalPageMenuItem[]>;
-}
+type SiteHeaderProps = {
+  menuItems?: InstitutionalPageMenuItem[];
+  sarMenuItems?: HeaderMenuItem[];
+  transparenciaMenuItems?: HeaderMenuItem[];
+};
 
 const navTriggerClassName =
   "h-auto rounded-md bg-transparent px-3 py-2 text-sm font-medium text-white/90 hover:bg-transparent hover:text-white/90 focus:bg-transparent focus:text-white/90 data-popup-open:bg-transparent data-popup-open:text-white/90 data-popup-open:hover:bg-transparent data-open:bg-transparent data-open:text-white/90 data-open:hover:bg-transparent data-open:focus:bg-transparent";
 
-export function SiteHeader({ menuItems = [] }: SiteHeaderProps) {
+export function SiteHeader({
+  menuItems,
+  sarMenuItems,
+  transparenciaMenuItems,
+}: SiteHeaderProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const grouped = groupMenuItems(menuItems);
+
+  // Resolution logic: use explicit sar/transparencia arrays if provided, else fallback to menuItems
+  const sarList: HeaderMenuItem[] =
+    sarMenuItems ??
+    (menuItems
+      ? menuItems
+          .filter((item) => item.menuGroup === "SAR")
+          .map((item) => ({
+            id: item.id,
+            title: item.title,
+            href: getInstitutionalPagePath(item.menuGroup, item.slug),
+            menuGroup: item.menuGroup,
+          }))
+      : []);
+
+  const transparenciaList: HeaderMenuItem[] =
+    transparenciaMenuItems ??
+    (menuItems
+      ? menuItems
+          .filter((item) => item.menuGroup === "TRANSPARENCIA")
+          .map((item) => ({
+            id: item.id,
+            title: item.title,
+            href: getInstitutionalPagePath(item.menuGroup, item.slug),
+            menuGroup: item.menuGroup,
+          }))
+      : []);
 
   useEffect(() => {
     const node = sentinelRef.current;
@@ -102,13 +133,13 @@ export function SiteHeader({ menuItems = [] }: SiteHeaderProps) {
               </a>
             ))}
 
-            {grouped.SAR.length > 0 || grouped.TRANSPARENCIA.length > 0 ? (
+            {sarList.length > 0 || transparenciaList.length > 0 ? (
               <NavigationMenu className="max-w-none">
                 <NavigationMenuList className="gap-0">
                   {(
                     [
-                      ["SAR", grouped.SAR],
-                      ["TRANSPARENCIA", grouped.TRANSPARENCIA],
+                      ["SAR", sarList],
+                      ["TRANSPARENCIA", transparenciaList],
                     ] as const
                   ).map(([group, items]) =>
                     items.length > 0 ? (
@@ -122,14 +153,7 @@ export function SiteHeader({ menuItems = [] }: SiteHeaderProps) {
                               <li key={item.id}>
                                 <NavigationMenuLink
                                   closeOnClick
-                                  render={
-                                    <Link
-                                      href={getInstitutionalPagePath(
-                                        item.menuGroup,
-                                        item.slug,
-                                      )}
-                                    />
-                                  }
+                                  render={<Link href={item.href} />}
                                   className="block rounded-md px-3 py-2 text-sm text-foreground hover:bg-muted"
                                 >
                                   {item.title}
@@ -193,8 +217,8 @@ export function SiteHeader({ menuItems = [] }: SiteHeaderProps) {
 
               {(
                 [
-                  ["SAR", grouped.SAR],
-                  ["TRANSPARENCIA", grouped.TRANSPARENCIA],
+                  ["SAR", sarList],
+                  ["TRANSPARENCIA", transparenciaList],
                 ] as const
               ).map(([group, items]) =>
                 items.length > 0 ? (
@@ -206,10 +230,7 @@ export function SiteHeader({ menuItems = [] }: SiteHeaderProps) {
                       {items.map((item) => (
                         <Link
                           key={item.id}
-                          href={getInstitutionalPagePath(
-                            item.menuGroup,
-                            item.slug,
-                          )}
+                          href={item.href}
                           onClick={() => setOpen(false)}
                           className="rounded-md px-3 py-2.5 text-sm font-medium text-white hover:bg-white/10"
                         >

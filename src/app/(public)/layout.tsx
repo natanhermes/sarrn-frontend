@@ -1,17 +1,60 @@
 import { SiteFooter } from "@/components/public/site-footer";
-import { SiteHeader } from "@/components/public/site-header";
-import { getPublicPagesMenu } from "@/lib/public-api";
+import { SiteHeader, type HeaderMenuItem } from "@/components/public/site-header";
+import { getPublicAboutUs, getPublicPagesMenu } from "@/lib/public-api";
+import { hasValidBlocks } from "@/lib/utils";
+import { getInstitutionalPagePath } from "@/schemas/institutional-pages";
 
 export default async function PublicLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const menuItems = await getPublicPagesMenu();
+  let sarMenuItems: HeaderMenuItem[] = [];
+  let transparenciaMenuItems: HeaderMenuItem[] = [];
+
+  try {
+    const [aboutUs, pagesMenu] = await Promise.all([
+      getPublicAboutUs(),
+      getPublicPagesMenu(),
+    ]);
+
+    // 1. Inserir "Quem somos" se houver blocos válidos em detailedBlocks
+    if (hasValidBlocks(aboutUs?.detailedBlocks)) {
+      sarMenuItems.push({
+        id: "quem-somos",
+        title: "Quem somos",
+        href: "/quem-somos",
+        menuGroup: "SAR",
+      });
+    }
+
+    // 2. Mapear páginas dinâmicas vindas da API
+    for (const item of pagesMenu) {
+      const formattedItem: HeaderMenuItem = {
+        id: String(item.id),
+        title: item.title,
+        href: getInstitutionalPagePath(item.menuGroup, item.slug),
+        menuGroup: item.menuGroup,
+      };
+
+      if (item.menuGroup === "SAR") {
+        sarMenuItems.push(formattedItem);
+      } else if (item.menuGroup === "TRANSPARENCIA") {
+        transparenciaMenuItems.push(formattedItem);
+      }
+    }
+  } catch {
+    // Tratar falha graciosamente em caso de erro na API
+    sarMenuItems = [];
+    transparenciaMenuItems = [];
+  }
 
   return (
     <div className="relative flex min-h-full min-w-0 flex-col overflow-x-hidden bg-background">
-      <SiteHeader menuItems={menuItems} />
+      <SiteHeader
+        sarMenuItems={sarMenuItems}
+        transparenciaMenuItems={transparenciaMenuItems}
+      />
       <div className="min-w-0 flex-1">{children}</div>
       <SiteFooter />
     </div>

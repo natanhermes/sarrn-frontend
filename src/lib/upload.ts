@@ -6,9 +6,13 @@ const IMAGE_MIME_TYPES = [
   "image/png",
   "image/webp",
   "image/avif",
+  "image/svg+xml",
 ] as const;
 
 export const IMAGE_ACCEPT =
+  "image/jpeg,image/jpg,image/png,image/webp,image/avif,.avif,image/svg+xml,.svg";
+
+export const GALLERY_IMAGE_ACCEPT =
   "image/jpeg,image/jpg,image/png,image/webp,image/avif,.avif";
 
 const PDF_MIME_TYPE = "application/pdf";
@@ -52,7 +56,8 @@ function isAllowedImageFile(file: File) {
     lowerName.endsWith(".jpeg") ||
     lowerName.endsWith(".png") ||
     lowerName.endsWith(".webp") ||
-    lowerName.endsWith(".avif")
+    lowerName.endsWith(".avif") ||
+    lowerName.endsWith(".svg")
   );
 }
 
@@ -78,11 +83,18 @@ function assertValidFile(file: File, kind: UploadKind) {
   }
 }
 
-export async function uploadMedia(file: File, kind: UploadKind = "image") {
+export async function uploadMedia(
+  file: File,
+  kind: UploadKind = "image",
+  path?: string,
+) {
   assertValidFile(file, kind);
 
   const formData = new FormData();
   formData.append("file", file);
+  if (path) {
+    formData.append("path", path);
+  }
 
   const { data } = await api.post<UploadResponse>("/admin/media/upload", formData, {
     headers: {
@@ -99,10 +111,10 @@ export async function uploadMedia(file: File, kind: UploadKind = "image") {
   return url;
 }
 
-export async function uploadImage(file: File) {
-  return uploadMedia(file, "image");
+export async function uploadImage(file: File, path?: string) {
+  return uploadMedia(file, "image", path);
 }
 
-export async function uploadPdf(file: File) {
-  return uploadMedia(file, "pdf");
+export async function uploadPdf(file: File, path?: string) {
+  return uploadMedia(file, "pdf", path);
 }

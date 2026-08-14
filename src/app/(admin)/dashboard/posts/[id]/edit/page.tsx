@@ -9,6 +9,7 @@ import { PostForm } from "@/components/admin/post-form";
 import api from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { canEditPost } from "@/lib/post-permissions";
+import { toContentBlockFormValues } from "@/schemas/content-blocks";
 import {
   parsePost,
   type PostSubmitPayload,
@@ -96,15 +97,14 @@ export default function EditPostPage() {
       <PostForm
         isEditing
         defaultValues={{
+          storageId: postQuery.data.storageId,
           type: postQuery.data.type,
           title: postQuery.data.title,
           summary: postQuery.data.summary,
           coverImageUrl: postQuery.data.coverImageUrl,
-          richTextContent: postQuery.data.richTextContent,
+          blocks: toContentBlockFormValues(postQuery.data.blocks),
           status: postQuery.data.status,
           publishedAt: postQuery.data.publishedAt ?? "",
-          galleryImages: postQuery.data.galleryImages,
-          attachmentUrls: postQuery.data.attachmentUrls,
           coAuthorIds: postQuery.data.coAuthors.map((author) => author.id),
           projectDetails: postQuery.data.projectDetails
             ? {

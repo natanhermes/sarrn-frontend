@@ -16,10 +16,13 @@ export const funderSchema = z
     is_active: z.boolean().nullish(),
     displayOrder: z.coerce.number().nullish(),
     display_order: z.coerce.number().nullish(),
+    storageId: z.string().nullable().optional(),
+    storage_id: z.string().nullable().optional(),
   })
   .passthrough()
   .transform((funder) => ({
     id: funder.id,
+    storageId: funder.storageId || funder.storage_id || undefined,
     name: funder.name,
     logoUrl: funder.logoUrl || funder.logo_url || "",
     siteUrl: funder.siteUrl || funder.site_url || "",
@@ -28,6 +31,7 @@ export const funderSchema = z
   }));
 
 export const funderFormSchema = z.object({
+  storageId: z.string().optional(),
   logoUrl: z.string().min(1, "Envie a logo do apoiador"),
   name: z.string().min(1, "Informe o nome"),
   siteUrl: z.string().optional(),
@@ -102,6 +106,7 @@ function optionalOrNull(value?: string | null) {
 
 export function toFunderSubmitPayload(values: FunderFormValues) {
   return {
+    storageId: values.storageId || undefined,
     logoUrl: values.logoUrl.trim(),
     name: values.name.trim(),
     siteUrl: optionalOrNull(values.siteUrl),

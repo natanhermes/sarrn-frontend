@@ -25,6 +25,7 @@ type QuillEditorProps = {
   onChange: (value: string) => void;
   disabled?: boolean;
   invalid?: boolean;
+  storagePath?: string;
 };
 
 export function QuillEditor(props: QuillEditorProps) {

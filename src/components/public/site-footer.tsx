@@ -5,24 +5,41 @@ import { SarrnLogo } from "@/components/public/sarrn-logo";
 const navegacao = [
   { label: "Início", href: "/#inicio" },
   { label: "A Instituição", href: "/#instituicao" },
-  { label: "Projetos", href: "/projetos" },
-  { label: "Notícias", href: "/noticias" },
-  { label: "Publicações", href: "/publicacoes" },
-  { label: "Transparência", href: "/#transparencia" },
+  { label: "Projetos", href: "/#projetos" },
+  { label: "Notícias", href: "/#noticias" },
+  { label: "Agenda", href: "/agenda" },
 ];
 
 const projetosLinks = [
-  { label: "Ver projetos", href: "/projetos" },
+  { label: "Projetos", href: "/projetos" },
   { label: "Notícias", href: "/noticias" },
   { label: "Publicações", href: "/publicacoes" },
-  { label: "Transparência", href: "/#transparencia" },
+  { label: "Cartilhas", href: "/publicacoes?type=BOOKLET" },
+  { label: "Documentos", href: "/publicacoes?type=DOCUMENT" },
+  { label: "Relatórios", href: "/publicacoes?type=REPORT" },
 ];
 
 const redes = [
-  { logo: "/brands/instagram.svg", label: "Instagram" },
-  { logo: "/brands/facebook.svg", label: "Facebook" },
-  { logo: "/brands/linkedin.svg", label: "LinkedIn" },
-  { logo: "/brands/youtube.svg", label: "YouTube" },
+  {
+    logo: "/brands/whatsapp.svg",
+    label: "WhatsApp",
+    href: "https://api.whatsapp.com/send?phone=5584996288269&text=Ol%C3%A1%21%20Seja%20bem-vindo%28a%29%21%20Como%20podemos%20ajudar%20voc%C3%AA%3F",
+  },
+  {
+    logo: "/brands/instagram.svg",
+    label: "Instagram",
+    href: "https://www.instagram.com/sarnatalrn/",
+  },
+  {
+    logo: "/brands/youtube.svg",
+    label: "YouTube",
+    href: "https://www.youtube.com/sarnatalrn",
+  },
+  {
+    logo: "/brands/facebook.svg",
+    label: "Facebook",
+    href: "https://www.facebook.com/sarrn.org.br/",
+  }
 ];
 
 export function SiteFooter() {
@@ -40,7 +57,9 @@ export function SiteFooter() {
               {redes.map((rede) => (
                 <a
                   key={rede.label}
-                  href="#"
+                  href={rede.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={rede.label}
                   className="grid size-9 place-items-center rounded-full bg-white/95 transition-transform duration-200 hover:-translate-y-0.5"
                 >
@@ -91,7 +110,7 @@ export function SiteFooter() {
             <ul className="mt-4 space-y-3 text-sm text-white/60">
               <li className="flex items-start gap-2.5">
                 <MapPin className="mt-0.5 size-4 shrink-0 text-brand-green" />
-                Rua das Acácias, 210 — Caicó/RN
+                Av. Floriano Peixoto, 674 - Tirol, Natal/RN
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="size-4 shrink-0 text-brand-green" />
@@ -99,7 +118,7 @@ export function SiteFooter() {
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="size-4 shrink-0 text-brand-green" />
-                contato@sarrn.org.br
+                sar@sarrn.org.br | sararquidiocese@gmail.com
               </li>
             </ul>
           </div>
@@ -108,16 +127,8 @@ export function SiteFooter() {
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-white/45 md:flex-row">
           <p>
             © 2026 SARRN — Todos os direitos reservados. CNPJ
-            00.000.000/0001-00
+            08.344.459/0001-14
           </p>
-          <div className="flex gap-5">
-            <a href="#" className="transition-colors hover:text-white/80">
-              Política de Privacidade
-            </a>
-            <a href="#" className="transition-colors hover:text-white/80">
-              Relatórios Financeiros
-            </a>
-          </div>
         </div>
       </div>
     </footer>

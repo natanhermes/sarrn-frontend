@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 
-import { PostAttachments } from "@/components/public/post-attachments";
-import { PostGallery } from "@/components/public/post-gallery";
 import { ProjectDetailsPanel } from "@/components/public/project-details-panel";
+import { BlockRenderer } from "@/components/shared/block-renderer";
 import { Badge } from "@/components/ui/badge";
 import { formatLongDateBR } from "@/lib/format";
 import {
   getPublicPostBySlug,
   resolvePublicMediaUrl,
 } from "@/lib/public-api";
-import { sanitizeRichText } from "@/lib/sanitize-html";
 import { postTypeLabels } from "@/schemas/posts";
 
 type PublicPostPageProps = {
@@ -36,12 +34,12 @@ export async function generateMetadata({
         "Publicação institucional da SARRN.",
       ...(coverImage
         ? {
-            images: [
-              {
-                url: coverImage,
-              },
-            ],
-          }
+          images: [
+            {
+              url: coverImage,
+            },
+          ],
+        }
         : {}),
     },
   };
@@ -51,7 +49,6 @@ export default async function PublicPostPage({ params }: PublicPostPageProps) {
   const { slug } = await params;
   const post = await getPublicPostBySlug(slug);
   const coverImage = resolvePublicMediaUrl(post.coverImageUrl);
-  const safeHtml = sanitizeRichText(post.richTextContent);
   const authorNames = [
     post.author?.name || post.authorName,
     ...post.coAuthors.map((author) => author.name),
@@ -61,8 +58,8 @@ export default async function PublicPostPage({ params }: PublicPostPageProps) {
 
   const publishedLabel = formatLongDateBR(
     post.publishedAt ||
-      post.projectDetails?.startDate ||
-      post.createdAt,
+    post.projectDetails?.startDate ||
+    post.createdAt,
   );
 
   return (
@@ -78,9 +75,9 @@ export default async function PublicPostPage({ params }: PublicPostPageProps) {
             className="object-cover opacity-45"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-green/40 via-brand-black to-brand-black" />
+          <div className="absolute inset-0 bg-linear-to-br from-brand-green/40 via-brand-black to-brand-black" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/70 to-brand-black/35" />
+        <div className="absolute inset-0 bg-linear-to-t from-brand-black via-brand-black/70 to-brand-black/35" />
 
         <div className="relative mx-auto flex min-h-[min(70vh,40rem)] w-full max-w-6xl flex-col justify-end px-5 pb-14 pt-28 md:px-8 md:pb-20">
           <Badge className="w-fit bg-brand-green text-white hover:bg-brand-green">
@@ -114,13 +111,9 @@ export default async function PublicPostPage({ params }: PublicPostPageProps) {
           <ProjectDetailsPanel details={post.projectDetails} />
         ) : null}
 
-        <article
-          className="prose prose-lg prose-brand dark:prose-invert mt-12 max-w-none"
-          dangerouslySetInnerHTML={{ __html: safeHtml }}
-        />
-
-        <PostGallery images={post.galleryImages} title={post.title} />
-        <PostAttachments urls={post.attachmentUrls} />
+        <div className="mt-12">
+          <BlockRenderer blocks={post.blocks} title={post.title} />
+        </div>
       </div>
     </main>
   );

@@ -84,6 +84,7 @@ export default function EditCarouselSlidePage() {
 
       <CarouselSlideForm
         defaultValues={{
+          storageId: slideQuery.data.storageId,
           imageUrl: slideQuery.data.imageUrl,
           badgeText: slideQuery.data.badgeText,
           title: slideQuery.data.title,

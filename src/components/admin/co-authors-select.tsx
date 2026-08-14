@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { parseUsersList, type AdminUser } from "@/schemas/users";
+import { parseAuthorsList, type AuthorSummary } from "@/schemas/users";
 
 type CoAuthorsSelectProps = {
   value?: string[];
@@ -33,29 +33,29 @@ export function CoAuthorsSelect({
 }: CoAuthorsSelectProps) {
   const selectedIds = value.filter(Boolean);
 
-  const usersQuery = useQuery({
-    queryKey: ["admin-users"],
+  const authorsQuery = useQuery({
+    queryKey: ["admin-authors"],
     queryFn: async () => {
-      const { data } = await api.get("/admin/users");
-      return parseUsersList(data);
+      const { data } = await api.get("/admin/users/authors");
+      return parseAuthorsList(data);
     },
   });
 
-  const options = (usersQuery.data ?? []).filter(
-    (user) => user.id !== excludeUserId,
+  const options = (authorsQuery.data ?? []).filter(
+    (author) => author.id !== excludeUserId,
   );
 
-  const selectedUsers = selectedIds
-    .map((id) => options.find((user) => user.id === id))
-    .filter((user): user is AdminUser => Boolean(user));
+  const selectedAuthors = selectedIds
+    .map((id) => options.find((author) => author.id === id))
+    .filter((author): author is AuthorSummary => Boolean(author));
 
-  function toggleUser(userId: string) {
-    if (selectedIds.includes(userId)) {
-      onChange(selectedIds.filter((id) => id !== userId));
+  function toggleAuthor(authorId: string) {
+    if (selectedIds.includes(authorId)) {
+      onChange(selectedIds.filter((id) => id !== authorId));
       return;
     }
 
-    onChange([...selectedIds, userId]);
+    onChange([...selectedIds, authorId]);
   }
 
   return (
@@ -66,51 +66,46 @@ export function CoAuthorsSelect({
             <Button
               type="button"
               variant="outline"
-              disabled={disabled || usersQuery.isLoading}
+              disabled={disabled || authorsQuery.isLoading}
               className="w-full justify-between font-normal"
             />
           }
         >
           <span className="truncate text-left">
-            {usersQuery.isLoading
-              ? "Carregando usuários..."
-              : selectedUsers.length > 0
-                ? `${selectedUsers.length} co-autor(es) selecionado(s)`
+            {authorsQuery.isLoading
+              ? "Carregando autores..."
+              : selectedAuthors.length > 0
+                ? `${selectedAuthors.length} co-autor(es) selecionado(s)`
                 : "Selecionar co-autores"}
           </span>
           <ChevronsUpDownIcon className="size-4 opacity-60" />
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-(--anchor-width) max-w-md">
           <DropdownMenuGroup>
-            <DropdownMenuLabel>Usuários do sistema</DropdownMenuLabel>
+            <DropdownMenuLabel>Autores do sistema</DropdownMenuLabel>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          {usersQuery.isError ? (
+          {authorsQuery.isError ? (
             <p className="px-2 py-3 text-sm text-destructive">
-              Não foi possível carregar os usuários.
+              Não foi possível carregar os autores.
             </p>
           ) : options.length === 0 ? (
             <p className="px-2 py-3 text-sm text-muted-foreground">
-              Nenhum usuário disponível.
+              Nenhum autor disponível.
             </p>
           ) : (
             <DropdownMenuGroup>
-              {options.map((user) => {
-                const checked = selectedIds.includes(user.id);
+              {options.map((author) => {
+                const checked = selectedIds.includes(author.id);
 
                 return (
                   <DropdownMenuCheckboxItem
-                    key={user.id}
+                    key={author.id}
                     checked={checked}
-                    onCheckedChange={() => toggleUser(user.id)}
+                    onCheckedChange={() => toggleAuthor(author.id)}
                     className={cn(checked && "font-medium")}
                   >
-                    <span className="flex min-w-0 flex-col">
-                      <span className="truncate">{user.name}</span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {user.email}
-                      </span>
-                    </span>
+                    <span className="truncate">{author.name}</span>
                     {checked ? <CheckIcon className="ml-auto" /> : null}
                   </DropdownMenuCheckboxItem>
                 );
@@ -120,17 +115,17 @@ export function CoAuthorsSelect({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {selectedUsers.length > 0 ? (
+      {selectedAuthors.length > 0 ? (
         <div className="flex flex-wrap gap-2">
-          {selectedUsers.map((user) => (
-            <Badge key={user.id} variant="secondary" className="gap-1 pr-1">
-              {user.name}
+          {selectedAuthors.map((author) => (
+            <Badge key={author.id} variant="secondary" className="gap-1 pr-1">
+              {author.name}
               <button
                 type="button"
                 disabled={disabled}
                 className="rounded-sm p-0.5 hover:bg-muted"
-                aria-label={`Remover ${user.name}`}
-                onClick={() => toggleUser(user.id)}
+                aria-label={`Remover ${author.name}`}
+                onClick={() => toggleAuthor(author.id)}
               >
                 <XIcon className="size-3" />
               </button>

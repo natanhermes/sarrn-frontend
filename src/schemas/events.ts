@@ -30,10 +30,13 @@ export const eventSummarySchema = z
     summary: optionalTextSchema.optional(),
     coverImageUrl: z.string().nullish(),
     cover_image_url: z.string().nullish(),
+    storageId: z.string().nullable().optional(),
+    storage_id: z.string().nullable().optional(),
   })
   .passthrough()
   .transform((event) => ({
     id: event.id,
+    storageId: event.storageId || event.storage_id || undefined,
     title: event.title,
     slug: event.slug,
     startDate: event.startDate || event.start_date || "",
@@ -58,11 +61,14 @@ export const eventSchema = z
     cover_image_url: z.string().nullish(),
     isPublished: z.boolean().nullish(),
     is_published: z.boolean().nullish(),
+    storageId: z.string().nullable().optional(),
+    storage_id: z.string().nullable().optional(),
     blocks: z.array(contentBlockSchema).nullish(),
   })
   .passthrough()
   .transform((event) => ({
     id: event.id,
+    storageId: event.storageId || event.storage_id || undefined,
     title: event.title,
     slug: event.slug,
     startDate: event.startDate || event.start_date || "",
@@ -98,6 +104,7 @@ export const eventSummariesPageSchema = z.object({
 
 export const eventFormSchema = z
   .object({
+    storageId: z.string().optional(),
     title: z
       .string()
       .min(1, "Informe o título")
@@ -262,6 +269,7 @@ export function emptyEventFormValues(): EventFormValues {
 
 export function toEventFormValues(event: Event): EventFormValues {
   return {
+    storageId: event.storageId,
     title: event.title,
     slug: event.slug,
     startDate: toDateTimeLocalValue(event.startDate),
@@ -281,6 +289,7 @@ function optionalOrNull(value?: string | null) {
 
 export function toEventSubmitPayload(values: EventFormValues) {
   return {
+    storageId: values.storageId || undefined,
     title: values.title.trim(),
     slug: optionalOrNull(values.slug),
     startDate: datetimeLocalToIsoWithOffset(values.startDate),

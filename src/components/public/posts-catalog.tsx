@@ -46,7 +46,7 @@ export function PostsCatalog({
   return (
     <main className="mx-auto w-full max-w-6xl px-5 pt-28 pb-24 md:px-8 md:pt-36 md:pb-32">
       <header className="max-w-2xl">
-        <span className="text-sm font-semibold tracking-widest text-brand-pink uppercase">
+        <span className="text-lg font-semibold tracking-widest text-brand-green uppercase">
           {eyebrow}
         </span>
         <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-balance leading-tight md:text-5xl">

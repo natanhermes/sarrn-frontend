@@ -3,7 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import { useMemo } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { ContentBlocksField } from "@/components/admin/content-blocks-field";
 import { CoverImageUpload } from "@/components/admin/cover-image-upload";
@@ -41,9 +42,15 @@ export function EventForm({
   const router = useRouter();
   const fallback = emptyEventFormValues();
 
+  const initialStorageId = useMemo(
+    () => defaultValues?.storageId || crypto.randomUUID(),
+    [defaultValues?.storageId],
+  );
+
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
+      storageId: initialStorageId,
       title: defaultValues?.title ?? fallback.title,
       slug: defaultValues?.slug ?? fallback.slug,
       startDate: defaultValues?.startDate ?? fallback.startDate,
@@ -57,6 +64,12 @@ export function EventForm({
         : fallback.blocks,
     },
   });
+
+  const watchStorageId = useWatch({
+    control: form.control,
+    name: "storageId",
+  });
+  const currentStorageId = watchStorageId || initialStorageId;
 
   async function handleSubmit(values: EventFormValues) {
     await onSubmit(toEventSubmitPayload(values));
@@ -78,6 +91,7 @@ export function EventForm({
                 value={field.value}
                 onChange={field.onChange}
                 disabled={isSubmitting}
+                storagePath={`agenda/${currentStorageId}/cover`}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
@@ -236,6 +250,7 @@ export function EventForm({
       <ContentBlocksField
         control={form.control}
         disabled={isSubmitting}
+        baseStoragePath={`agenda/${currentStorageId}/blocks`}
         errorsMessage={
           form.formState.errors.blocks?.root?.message ||
           form.formState.errors.blocks?.message

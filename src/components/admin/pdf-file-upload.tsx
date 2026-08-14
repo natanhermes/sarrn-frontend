@@ -6,12 +6,15 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { canDeleteMedia } from "@/lib/post-permissions";
 import { uploadPdf } from "@/lib/upload";
+import { useAuth } from "@/store/useAuth";
 
 type PdfFileUploadProps = {
   value?: string;
   onChange: (url: string) => void;
   disabled?: boolean;
+  storagePath?: string;
 };
 
 function getFileNameFromUrl(url: string) {
@@ -29,9 +32,12 @@ export function PdfFileUpload({
   value = "",
   onChange,
   disabled = false,
+  storagePath,
 }: PdfFileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const user = useAuth((state) => state.user);
+  const allowDelete = canDeleteMedia(user);
   const fileUrl = value.trim();
 
   async function handleFile(files?: FileList | null) {
@@ -43,7 +49,7 @@ export function PdfFileUpload({
     setIsUploading(true);
 
     try {
-      const url = await uploadPdf(file);
+      const url = await uploadPdf(file, storagePath);
       onChange(url);
       toast.success("PDF enviado com sucesso");
     } catch (error) {
@@ -80,16 +86,18 @@ export function PdfFileUpload({
               {getFileNameFromUrl(fileUrl)}
             </a>
           </div>
-          <Button
-            type="button"
-            size="icon-sm"
-            variant="ghost"
-            aria-label="Remover PDF"
-            disabled={disabled || isUploading}
-            onClick={() => onChange("")}
-          >
-            <Trash2Icon />
-          </Button>
+          {allowDelete ? (
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="ghost"
+              aria-label="Remover PDF"
+              disabled={disabled || isUploading}
+              onClick={() => onChange("")}
+            >
+              <Trash2Icon />
+            </Button>
+          ) : null}
         </div>
       ) : null}
 

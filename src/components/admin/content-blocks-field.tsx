@@ -26,14 +26,14 @@ import {
   type ContentBlockFormValues,
 } from "@/schemas/content-blocks";
 
-type FormWithBlocks = FieldValues & {
-  blocks: ContentBlockFormValues[];
-};
+type FormWithBlocks = FieldValues;
 
 type ContentBlocksFieldProps<T extends FormWithBlocks> = {
   control: Control<T>;
+  name?: Path<T>;
   disabled?: boolean;
   errorsMessage?: string;
+  baseStoragePath?: string;
 };
 
 const blockMeta = {
@@ -53,12 +53,14 @@ const blockMeta = {
 
 export function ContentBlocksField<T extends FormWithBlocks>({
   control,
+  name = "blocks" as Path<T>,
   disabled = false,
   errorsMessage,
+  baseStoragePath,
 }: ContentBlocksFieldProps<T>) {
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "blocks" as ArrayPath<T>,
+    name: name as ArrayPath<T>,
   });
 
   return (
@@ -80,7 +82,7 @@ export function ContentBlocksField<T extends FormWithBlocks>({
           <Controller
             key={item.id}
             control={control}
-            name={`blocks.${index}.type` as Path<T>}
+            name={`${name}.${index}.type` as Path<T>}
             render={({ field: typeField }) => {
               const blockType = typeField.value as ContentBlockFormValues["type"];
               const meta = blockMeta[blockType];
@@ -115,7 +117,7 @@ export function ContentBlocksField<T extends FormWithBlocks>({
                   {blockType === "TEXT" ? (
                     <Controller
                       control={control}
-                      name={`blocks.${index}.content` as Path<T>}
+                      name={`${name}.${index}.content` as Path<T>}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel>Conteúdo</FieldLabel>
@@ -124,6 +126,11 @@ export function ContentBlocksField<T extends FormWithBlocks>({
                             onChange={field.onChange}
                             disabled={disabled}
                             invalid={fieldState.invalid}
+                            storagePath={
+                              baseStoragePath
+                                ? `${baseStoragePath}/editor`
+                                : undefined
+                            }
                           />
                           {fieldState.invalid && (
                             <FieldError errors={[fieldState.error]} />
@@ -136,7 +143,7 @@ export function ContentBlocksField<T extends FormWithBlocks>({
                   {blockType === "GALLERY" ? (
                     <Controller
                       control={control}
-                      name={`blocks.${index}.galleryUrls` as Path<T>}
+                      name={`${name}.${index}.galleryUrls` as Path<T>}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel>Imagens da galeria</FieldLabel>
@@ -144,6 +151,11 @@ export function ContentBlocksField<T extends FormWithBlocks>({
                             value={(field.value as string[]) ?? []}
                             onChange={field.onChange}
                             disabled={disabled}
+                            storagePath={
+                              baseStoragePath
+                                ? `${baseStoragePath}/gallery`
+                                : undefined
+                            }
                           />
                           {fieldState.invalid && (
                             <FieldError errors={[fieldState.error]} />
@@ -157,7 +169,7 @@ export function ContentBlocksField<T extends FormWithBlocks>({
                     <div className="flex flex-col gap-4">
                       <Controller
                         control={control}
-                        name={`blocks.${index}.fileTitle` as Path<T>}
+                        name={`${name}.${index}.fileTitle` as Path<T>}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
                             <FieldLabel htmlFor={`block-file-title-${index}`}>
@@ -181,7 +193,7 @@ export function ContentBlocksField<T extends FormWithBlocks>({
                       />
                       <Controller
                         control={control}
-                        name={`blocks.${index}.fileUrl` as Path<T>}
+                        name={`${name}.${index}.fileUrl` as Path<T>}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
                             <FieldLabel>Arquivo PDF</FieldLabel>
@@ -189,6 +201,11 @@ export function ContentBlocksField<T extends FormWithBlocks>({
                               value={(field.value as string) ?? ""}
                               onChange={field.onChange}
                               disabled={disabled}
+                              storagePath={
+                                baseStoragePath
+                                  ? `${baseStoragePath}/files`
+                                  : undefined
+                              }
                             />
                             {fieldState.invalid && (
                               <FieldError errors={[fieldState.error]} />

@@ -86,6 +86,7 @@ export default function EditFunderPage() {
 
       <FunderForm
         defaultValues={{
+          storageId: funderQuery.data.storageId,
           logoUrl: funderQuery.data.logoUrl,
           name: funderQuery.data.name,
           siteUrl: funderQuery.data.siteUrl,

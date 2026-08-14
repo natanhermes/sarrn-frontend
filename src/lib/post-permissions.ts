@@ -73,6 +73,10 @@ export function canSetPostStatus(user: AuthUser | null | undefined) {
   return user?.role !== "CONTRIBUTOR";
 }
 
+export function canDeleteMedia(user: AuthUser | null | undefined) {
+  return user?.role === "ADMIN" || user?.role === "EDITOR";
+}
+
 export function resolvePostStatusForSubmit(
   user: AuthUser | null | undefined,
   status: PostStatus,

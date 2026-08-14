@@ -3,7 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import { useMemo } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { ContentBlocksField } from "@/components/admin/content-blocks-field";
 import { Button } from "@/components/ui/button";
@@ -53,9 +54,15 @@ export function InstitutionalPageForm({
   const router = useRouter();
   const fallback = emptyInstitutionalPageFormValues();
 
+  const initialStorageId = useMemo(
+    () => defaultValues?.storageId || crypto.randomUUID(),
+    [defaultValues?.storageId],
+  );
+
   const form = useForm<InstitutionalPageFormValues>({
     resolver: zodResolver(institutionalPageFormSchema),
     defaultValues: {
+      storageId: initialStorageId,
       title: defaultValues?.title ?? fallback.title,
       slug: defaultValues?.slug ?? fallback.slug,
       menuGroup: defaultValues?.menuGroup ?? fallback.menuGroup,
@@ -64,6 +71,12 @@ export function InstitutionalPageForm({
         : fallback.blocks,
     },
   });
+
+  const watchStorageId = useWatch({
+    control: form.control,
+    name: "storageId",
+  });
+  const currentStorageId = watchStorageId || initialStorageId;
 
   async function handleSubmit(values: InstitutionalPageFormValues) {
     await onSubmit(toInstitutionalPageSubmitPayload(values));
@@ -154,6 +167,7 @@ export function InstitutionalPageForm({
       <ContentBlocksField
         control={form.control}
         disabled={isSubmitting}
+        baseStoragePath={`paginas/${currentStorageId}/blocks`}
         errorsMessage={
           form.formState.errors.blocks?.root?.message ||
           form.formState.errors.blocks?.message

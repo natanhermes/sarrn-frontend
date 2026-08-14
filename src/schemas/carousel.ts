@@ -17,10 +17,17 @@ export const carouselSlideSchema = z
     secondaryButtonUrl: optionalTextSchema,
     isActive: z.boolean(),
     displayOrder: z.coerce.number(),
+    storageId: z.string().nullable().optional(),
+    storage_id: z.string().nullable().optional(),
   })
-  .passthrough();
+  .passthrough()
+  .transform((slide) => ({
+    ...slide,
+    storageId: slide.storageId || slide.storage_id || undefined,
+  }));
 
 export const carouselSlideFormSchema = z.object({
+  storageId: z.string().optional(),
   imageUrl: z.string().min(1, "Envie a imagem do slide"),
   badgeText: z.string().optional(),
   title: z.string().min(1, "Informe o título"),
@@ -88,6 +95,7 @@ function optionalOrNull(value?: string | null) {
 
 export function toCarouselSlideSubmitPayload(values: CarouselSlideFormValues) {
   return {
+    storageId: values.storageId || undefined,
     imageUrl: values.imageUrl.trim(),
     badgeText: optionalOrNull(values.badgeText),
     title: values.title.trim(),

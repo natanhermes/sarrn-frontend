@@ -9,6 +9,17 @@ export const adminUserSchema = z.object({
   role: userRoleSchema,
 });
 
+export const authorSummarySchema = z
+  .object({
+    id: z.union([z.string(), z.number()]).transform(String),
+    name: z.string().optional(),
+    nome: z.string().optional(),
+  })
+  .transform((author) => ({
+    id: author.id,
+    name: author.name ?? author.nome ?? "",
+  }));
+
 export const createUserSchema = z.object({
   name: z.string().min(1, "Informe o nome"),
   email: z.string().min(1, "Informe o e-mail").email("E-mail inválido"),
@@ -28,7 +39,16 @@ export const usersListResponseSchema = z.union([
   z.object({ users: z.array(adminUserSchema) }),
 ]);
 
+export const authorsListResponseSchema = z.union([
+  z.array(authorSummarySchema),
+  z.object({ content: z.array(authorSummarySchema) }),
+  z.object({ data: z.array(authorSummarySchema) }),
+  z.object({ authors: z.array(authorSummarySchema) }),
+  z.object({ users: z.array(authorSummarySchema) }),
+]);
+
 export type AdminUser = z.infer<typeof adminUserSchema>;
+export type AuthorSummary = z.infer<typeof authorSummarySchema>;
 export type CreateUserFormValues = z.infer<typeof createUserSchema>;
 
 export function parseUsersList(payload: unknown): AdminUser[] {
@@ -44,6 +64,28 @@ export function parseUsersList(payload: unknown): AdminUser[] {
 
   if ("data" in parsed) {
     return parsed.data;
+  }
+
+  return parsed.users;
+}
+
+export function parseAuthorsList(payload: unknown): AuthorSummary[] {
+  const parsed = authorsListResponseSchema.parse(payload);
+
+  if (Array.isArray(parsed)) {
+    return parsed;
+  }
+
+  if ("content" in parsed) {
+    return parsed.content;
+  }
+
+  if ("data" in parsed) {
+    return parsed.data;
+  }
+
+  if ("authors" in parsed) {
+    return parsed.authors;
   }
 
   return parsed.users;

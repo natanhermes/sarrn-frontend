@@ -50,6 +50,8 @@ export const institutionalPageSchema = z
     slug: z.string(),
     menuGroup: menuGroupSchema.optional(),
     menu_group: menuGroupSchema.optional(),
+    storageId: z.string().nullable().optional(),
+    storage_id: z.string().nullable().optional(),
     blocks: z.array(contentBlockSchema).nullish(),
   })
   .passthrough()
@@ -62,6 +64,7 @@ export const institutionalPageSchema = z
 
     return {
       id: page.id,
+      storageId: page.storageId || page.storage_id || undefined,
       title: page.title,
       slug: page.slug,
       menuGroup,
@@ -96,6 +99,7 @@ export const institutionalPageMenuItemSchema = z
   });
 
 export const institutionalPageFormSchema = z.object({
+  storageId: z.string().optional(),
   title: z
     .string()
     .min(1, "Informe o título")
@@ -199,6 +203,7 @@ export function toInstitutionalPageFormValues(
   page: InstitutionalPage,
 ): InstitutionalPageFormValues {
   return {
+    storageId: page.storageId,
     title: page.title,
     slug: page.slug,
     menuGroup: page.menuGroup,
@@ -224,6 +229,7 @@ export function toInstitutionalPageSubmitPayload(
   values: InstitutionalPageFormValues,
 ) {
   return {
+    storageId: values.storageId || undefined,
     title: values.title.trim(),
     slug: optionalOrNull(values.slug),
     menuGroup: values.menuGroup,

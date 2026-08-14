@@ -15,6 +15,7 @@ type QuillEditorClientProps = {
   onChange: (value: string) => void;
   disabled?: boolean;
   invalid?: boolean;
+  storagePath?: string;
 };
 
 const QUILL_FORMATS = [
@@ -33,6 +34,7 @@ export default function QuillEditorClient({
   onChange,
   disabled = false,
   invalid = false,
+  storagePath,
 }: QuillEditorClientProps) {
   const quillRef = useRef<ReactQuill | null>(null);
 
@@ -61,7 +63,7 @@ export default function QuillEditorClient({
               }
 
               try {
-                const url = await uploadImage(file);
+                const url = await uploadImage(file, storagePath);
                 const editor = quillRef.current?.getEditor();
                 if (!editor) {
                   return;
@@ -85,7 +87,7 @@ export default function QuillEditorClient({
         },
       },
     }),
-    [disabled],
+    [disabled, storagePath],
   );
 
   return (

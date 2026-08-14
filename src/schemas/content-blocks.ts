@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { sanitizeRichText } from "@/lib/sanitize-html";
+import { isEmptyRichText } from "@/lib/utils";
 
 export const blockTypeSchema = z.enum(["TEXT", "GALLERY", "FILE"]);
 
@@ -89,7 +90,20 @@ export type ContentBlock = z.infer<typeof contentBlockSchema>;
 export type ContentBlockFormValues = z.infer<typeof contentBlockFormSchema>;
 
 export function toBlocksSubmitPayload(blocks: ContentBlockFormValues[]) {
-  return blocks.map((block, index) => {
+  const validBlocks = blocks.filter((block) => {
+    if (block.type === "TEXT") {
+      return !isEmptyRichText(block.content);
+    }
+    if (block.type === "GALLERY") {
+      return Boolean(block.galleryUrls && block.galleryUrls.length > 0);
+    }
+    if (block.type === "FILE") {
+      return Boolean(block.fileUrl && block.fileUrl.trim());
+    }
+    return false;
+  });
+
+  return validBlocks.map((block, index) => {
     if (block.type === "TEXT") {
       return {
         type: "TEXT" as const,

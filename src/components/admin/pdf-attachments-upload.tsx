@@ -6,12 +6,15 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { canDeleteMedia } from "@/lib/post-permissions";
 import { uploadPdf } from "@/lib/upload";
+import { useAuth } from "@/store/useAuth";
 
 type PdfAttachmentsUploadProps = {
   value?: string[];
   onChange: (urls: string[]) => void;
   disabled?: boolean;
+  storagePath?: string;
 };
 
 function getFileNameFromUrl(url: string) {
@@ -29,9 +32,12 @@ export function PdfAttachmentsUpload({
   value = [],
   onChange,
   disabled = false,
+  storagePath,
 }: PdfAttachmentsUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const user = useAuth((state) => state.user);
+  const allowDelete = canDeleteMedia(user);
   const attachments = value.filter(Boolean);
 
   async function handleFiles(files?: FileList | null) {
@@ -45,7 +51,7 @@ export function PdfAttachmentsUpload({
       const uploaded: string[] = [];
 
       for (const file of Array.from(files)) {
-        uploaded.push(await uploadPdf(file));
+        uploaded.push(await uploadPdf(file, storagePath));
       }
 
       onChange([...attachments, ...uploaded]);
@@ -105,16 +111,18 @@ export function PdfAttachmentsUpload({
                   Abrir anexo
                 </a>
               </div>
-              <Button
-                type="button"
-                size="icon-sm"
-                variant="ghost"
-                disabled={disabled || isUploading}
-                onClick={() => removeAt(index)}
-                aria-label="Remover anexo"
-              >
-                <Trash2Icon />
-              </Button>
+              {allowDelete ? (
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="ghost"
+                  disabled={disabled || isUploading}
+                  onClick={() => removeAt(index)}
+                  aria-label="Remover anexo"
+                >
+                  <Trash2Icon />
+                </Button>
+              ) : null}
             </li>
           ))}
         </ul>

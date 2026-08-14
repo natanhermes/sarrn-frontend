@@ -6,7 +6,9 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { IMAGE_ACCEPT, uploadImage } from "@/lib/upload";
+import { canDeleteMedia } from "@/lib/post-permissions";
+import { GALLERY_IMAGE_ACCEPT, uploadImage } from "@/lib/upload";
+import { useAuth } from "@/store/useAuth";
 
 const MAX_GALLERY_IMAGES = 15;
 
@@ -14,15 +16,19 @@ type GalleryImagesUploadProps = {
   value?: string[];
   onChange: (urls: string[]) => void;
   disabled?: boolean;
+  storagePath?: string;
 };
 
 export function GalleryImagesUpload({
   value = [],
   onChange,
   disabled = false,
+  storagePath,
 }: GalleryImagesUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const user = useAuth((state) => state.user);
+  const allowDelete = canDeleteMedia(user);
   const images = value.filter(Boolean);
   const remainingSlots = MAX_GALLERY_IMAGES - images.length;
   const isAtLimit = remainingSlots <= 0;
@@ -33,6 +39,22 @@ export function GalleryImagesUpload({
     }
 
     const selected = Array.from(files);
+
+    const hasSvg = selected.some(
+      (file) =>
+        file.type === "image/svg+xml" ||
+        file.name.toLowerCase().endsWith(".svg"),
+    );
+
+    if (hasSvg) {
+      toast.error(
+        "SVGs não são permitidos em blocos de galeria. Selecione apenas imagens (JPG, PNG, WEBP ou AVIF).",
+      );
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+      return;
+    }
 
     if (selected.length > remainingSlots) {
       toast.error(
@@ -50,7 +72,7 @@ export function GalleryImagesUpload({
       const uploaded: string[] = [];
 
       for (const file of selected) {
-        uploaded.push(await uploadImage(file));
+        uploaded.push(await uploadImage(file, storagePath));
       }
 
       onChange([...images, ...uploaded]);
@@ -80,7 +102,7 @@ export function GalleryImagesUpload({
       <input
         ref={inputRef}
         type="file"
-        accept={IMAGE_ACCEPT}
+        accept={GALLERY_IMAGE_ACCEPT}
         multiple
         className="hidden"
         disabled={disabled || isUploading || isAtLimit}
@@ -103,17 +125,19 @@ export function GalleryImagesUpload({
                 alt={`Imagem ${index + 1} da galeria`}
                 className="aspect-square w-full object-cover"
               />
-              <Button
-                type="button"
-                size="icon-sm"
-                variant="secondary"
-                className="absolute top-2 right-2"
-                disabled={disabled || isUploading}
-                onClick={() => removeAt(index)}
-                aria-label="Remover imagem"
-              >
-                <Trash2Icon />
-              </Button>
+              {allowDelete ? (
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="secondary"
+                  className="absolute top-2 right-2"
+                  disabled={disabled || isUploading}
+                  onClick={() => removeAt(index)}
+                  aria-label="Remover imagem"
+                >
+                  <Trash2Icon />
+                </Button>
+              ) : null}
             </div>
           ))}
         </div>

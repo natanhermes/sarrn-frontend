@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 import { datetimeLocalToIsoWithOffset } from "@/lib/format";
-import { isRichTextEmpty } from "@/lib/sanitize-html";
+import {
+  contentBlockFormSchema,
+  contentBlockSchema,
+  toBlocksSubmitPayload,
+} from "@/schemas/content-blocks";
 
 export const postTypeSchema = z.enum([
   "PROJECT",
@@ -17,12 +21,6 @@ export const executionStatusSchema = z.enum([
   "ONGOING",
   "COMPLETED",
 ]);
-
-const stringListSchema = z
-  .array(z.string())
-  .nullable()
-  .optional()
-  .transform((value) => value?.filter(Boolean) ?? []);
 
 export const projectDetailsSchema = z
   .object({
@@ -68,14 +66,11 @@ export const postSchema = z
     status: postStatusSchema,
     summary: z.string().nullable().optional(),
     coverImageUrl: z.string().nullable().optional(),
-    richTextContent: z.string().nullable().optional(),
-    galleryImages: stringListSchema,
-    gallery_images: stringListSchema,
-    attachmentUrls: stringListSchema,
-    attachment_urls: stringListSchema,
-    attachmentUrl: z.string().nullable().optional(),
+    blocks: z.array(contentBlockSchema).nullish(),
     projectDetails: projectDetailsSchema.nullable().optional(),
     project_details: projectDetailsSchema.nullable().optional(),
+    storageId: z.string().nullable().optional(),
+    storage_id: z.string().nullable().optional(),
     authorId: z
       .union([z.string(), z.number()])
       .transform(String)
@@ -98,31 +93,21 @@ export const postSchema = z
   .transform((post) => {
     const authorId =
       post.authorId || post.author_id || post.author?.id || "";
-    const galleryImages =
-      post.galleryImages.length > 0
-        ? post.galleryImages
-        : post.gallery_images;
-    const attachmentUrls =
-      post.attachmentUrls.length > 0
-        ? post.attachmentUrls
-        : post.attachment_urls.length > 0
-          ? post.attachment_urls
-          : post.attachmentUrl?.trim()
-            ? [post.attachmentUrl]
-            : [];
     const coAuthors = post.coAuthors ?? post.co_authors ?? [];
+    const storageId = post.storageId || post.storage_id || undefined;
 
     return {
       id: post.id,
+      storageId,
       title: post.title,
       slug: post.slug,
       type: post.type,
       status: post.status,
       summary: post.summary ?? "",
       coverImageUrl: post.coverImageUrl ?? "",
-      richTextContent: post.richTextContent ?? "",
-      galleryImages,
-      attachmentUrls,
+      blocks: [...(post.blocks ?? [])].sort(
+        (a, b) => a.displayOrder - b.displayOrder,
+      ),
       projectDetails: post.projectDetails ?? post.project_details ?? null,
       author: post.author
         ? {
@@ -170,16 +155,17 @@ export const postsListResponseSchema = z.union([
 
 export const postFormSchema = z
   .object({
+    storageId: z.string().optional(),
     type: postTypeSchema,
     title: z.string().min(1, "Informe o título"),
     summary: z.string().optional(),
     coverImageUrl: z.string().optional(),
-    richTextContent: z.string().min(1, "Informe o conteúdo"),
+    blocks: z
+      .array(contentBlockFormSchema)
+      .min(1, "Adicione ao menos um bloco"),
     status: postStatusSchema,
     manualPublishedAt: z.boolean(),
     publishedAt: z.string().optional(),
-    galleryImages: z.array(z.string()),
-    attachmentUrls: z.array(z.string()),
     coAuthorIds: z.array(z.string()),
     projectDetails: z
       .object({
@@ -192,14 +178,6 @@ export const postFormSchema = z
       .optional(),
   })
   .superRefine((values, ctx) => {
-    if (isRichTextEmpty(values.richTextContent)) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["richTextContent"],
-        message: "Informe o conteúdo",
-      });
-    }
-
     if (values.type !== "PROJECT") {
       const requiresPublishedAt =
         values.status === "SCHEDULED" || values.manualPublishedAt;
@@ -350,19 +328,16 @@ export function parsePost(payload: unknown): AdminPost {
 }
 
 export function toPostSubmitPayload(values: PostFormValues) {
-  const galleryImages = (values.galleryImages ?? []).filter(Boolean);
-  const attachmentUrls = (values.attachmentUrls ?? []).filter(Boolean);
   const coAuthorIds = (values.coAuthorIds ?? []).filter(Boolean);
 
   const base = {
+    storageId: values.storageId || undefined,
     type: values.type,
     title: values.title,
     summary: values.summary?.trim() || undefined,
     coverImageUrl: values.coverImageUrl?.trim() || undefined,
-    richTextContent: values.richTextContent,
+    blocks: toBlocksSubmitPayload(values.blocks),
     status: values.status,
-    galleryImages,
-    attachmentUrls,
     coAuthorIds,
   };
 

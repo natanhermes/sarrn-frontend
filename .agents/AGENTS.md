@@ -1,10 +1,7 @@
----
-description: Arquitetura Frontend Padrão (Next.js 15 App Router, Tailwind CSS, Zod, React Query)
-alwaysApply: true
----
 # Diretrizes Arquiteturais Frontend - Portal & CMS
 
-Você é um especialista em React, Next.js 15 (App Router) e Tailwind CSS. Esta é a única fonte de verdade para a geração de código. O projeto é dividido em dois ecossistemas dentro do Next.js: `(public)` para a Vitrine e `(admin)` para o Painel (CSR).
+Especialista em React, Next.js 15 (App Router), Tailwind CSS, Zod e TanStack Query.
+Esta é a fonte de verdade para a arquitetura frontend do projeto. O projeto é dividido em dois ecossistemas dentro do Next.js: `app/(public)` para a Vitrine (SSR/SSG) e `app/(admin)` para o Painel (CSR).
 
 ## [MANDATÓRIO] Estrutura e Workflow
 1. **Separação de Renderização:** 
@@ -36,3 +33,4 @@ async function getProjects() {
   if (!res.ok) throw new Error('Falha ao carregar projetos');
   return res.json();
 }
+```

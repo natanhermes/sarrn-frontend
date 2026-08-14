@@ -1,5 +1,6 @@
 "use client";
 
+import { BlockRenderer } from "@/components/shared/block-renderer";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -13,7 +14,6 @@ import {
   formatDateBR,
   formatDateTimeBR,
 } from "@/lib/format";
-import { sanitizeRichText } from "@/lib/sanitize-html";
 import {
   executionStatusLabels,
   postStatusLabels,
@@ -33,7 +33,6 @@ export function ViewPostDialog({
   onOpenChange,
   isLoading = false,
 }: ViewPostDialogProps) {
-  const safeHtml = sanitizeRichText(post?.richTextContent ?? "");
   const details = post?.projectDetails;
 
   return (
@@ -79,45 +78,6 @@ export function ViewPostDialog({
                 </span>
               </p>
             </div>
-
-            {post.galleryImages.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {post.galleryImages.map((url) => (
-                  <div
-                    key={url}
-                    className="overflow-hidden rounded-lg border border-border bg-muted/20"
-                  >
-                    <img
-                      src={url}
-                      alt=""
-                      className="aspect-square w-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : null}
-
-            {post.attachmentUrls.length > 0 ? (
-              <div>
-                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                  Anexos
-                </p>
-                <ul className="mt-2 space-y-1">
-                  {post.attachmentUrls.map((url) => (
-                    <li key={url}>
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-primary underline-offset-2 hover:underline"
-                      >
-                        {url.split("/").pop() || url}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
 
             {post.coverImageUrl?.trim() ? (
               <div className="flex max-h-64 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/20">
@@ -200,10 +160,9 @@ export function ViewPostDialog({
               <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
                 Conteúdo
               </p>
-              <div
-                className="prose prose-sm max-w-none rounded-lg border border-border bg-muted/20 p-4 [&_img]:max-w-full"
-                dangerouslySetInnerHTML={{ __html: safeHtml }}
-              />
+              <div className="rounded-lg border border-border bg-muted/20 p-4">
+                <BlockRenderer blocks={post.blocks} title={post.title} />
+              </div>
             </div>
           </div>
         )}

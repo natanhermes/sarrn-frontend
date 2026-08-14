@@ -3,7 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import { useMemo } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { CoverImageUpload } from "@/components/admin/cover-image-upload";
 import { Button } from "@/components/ui/button";
@@ -38,9 +39,15 @@ export function CarouselSlideForm({
 }: CarouselSlideFormProps) {
   const router = useRouter();
 
+  const initialStorageId = useMemo(
+    () => defaultValues?.storageId || crypto.randomUUID(),
+    [defaultValues?.storageId],
+  );
+
   const form = useForm<CarouselSlideFormValues>({
     resolver: zodResolver(carouselSlideFormSchema),
     defaultValues: {
+      storageId: initialStorageId,
       imageUrl: defaultValues?.imageUrl ?? "",
       badgeText: defaultValues?.badgeText ?? "",
       title: defaultValues?.title ?? "",
@@ -53,6 +60,12 @@ export function CarouselSlideForm({
       displayOrder: defaultValues?.displayOrder ?? 0,
     },
   });
+
+  const watchStorageId = useWatch({
+    control: form.control,
+    name: "storageId",
+  });
+  const currentStorageId = watchStorageId || initialStorageId;
 
   async function handleSubmit(values: CarouselSlideFormValues) {
     await onSubmit(toCarouselSlideSubmitPayload(values));
@@ -74,6 +87,7 @@ export function CarouselSlideForm({
                 value={field.value}
                 onChange={field.onChange}
                 disabled={isSubmitting}
+                storagePath={`carrossel/${currentStorageId}/cover`}
               />
               <FieldDescription>
                 Imagem de fundo do banner (recomendado paisagem em alta

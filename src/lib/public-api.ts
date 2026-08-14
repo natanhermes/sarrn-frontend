@@ -1,5 +1,10 @@
 import { notFound } from "next/navigation";
 
+import { CACHE_TAGS, tagsForPostTypes } from "@/lib/cache-tags";
+import {
+  parseAboutUs,
+  type AboutUs,
+} from "@/schemas/about";
 import {
   parseActionLine,
   parseActionLineSummariesList,
@@ -24,9 +29,12 @@ import {
   type FundersGrouped,
 } from "@/schemas/funders";
 import {
-  parseStatisticsList,
-  type Statistic,
-} from "@/schemas/statistics";
+  parseInstitutionalPage,
+  parseInstitutionalPagesMenu,
+  pathToMenuGroup,
+  type InstitutionalPage,
+  type InstitutionalPageMenuItem,
+} from "@/schemas/institutional-pages";
 import {
   parsePost,
   parsePostsPage,
@@ -35,18 +43,13 @@ import {
   type PostType,
 } from "@/schemas/posts";
 import {
-  parseInstitutionalPage,
-  parseInstitutionalPagesMenu,
-  pathToMenuGroup,
-  type InstitutionalPage,
-  type InstitutionalPageMenuItem,
-} from "@/schemas/institutional-pages";
-import {
   parseSiteSettings,
   type SiteSettings,
 } from "@/schemas/settings";
-
-const REVALIDATE_SECONDS = 60;
+import {
+  parseStatisticsList,
+  type Statistic,
+} from "@/schemas/statistics";
 
 export type PublicPost = AdminPost;
 export type PublicCarouselSlide = CarouselSlide;
@@ -56,6 +59,7 @@ export type PublicPostsPage = PostsPage;
 export type PublicActionLine = ActionLine;
 export type PublicActionLineSummary = ActionLineSummary;
 export type PublicSiteSettings = SiteSettings;
+export type PublicAboutUs = AboutUs;
 export type PublicInstitutionalPage = InstitutionalPage;
 export type PublicInstitutionalPageMenuItem = InstitutionalPageMenuItem;
 export type PublicStatistic = Statistic;
@@ -149,8 +153,7 @@ export async function getPublicPostsPage(
   try {
     const response = await fetch(endpoint, {
       next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: ["posts"],
+        tags: tagsForPostTypes(params.type),
       },
     });
 
@@ -201,8 +204,7 @@ export async function getPublicPostBySlug(slug: string): Promise<PublicPost> {
   try {
     response = await fetch(endpoint, {
       next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: ["posts", `post-${slug}`],
+        tags: tagsForPostTypes(),
       },
     });
   } catch {
@@ -241,8 +243,7 @@ export async function getPublicCarouselSlides(): Promise<PublicCarouselSlide[]> 
   try {
     const response = await fetch(endpoint, {
       next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: ["carousel"],
+        tags: [CACHE_TAGS.carousel],
       },
     });
 
@@ -287,8 +288,7 @@ export async function getPublicFunders(): Promise<PublicFunder[]> {
   try {
     const response = await fetch(endpoint, {
       next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: ["funders"],
+        tags: [CACHE_TAGS.funders],
       },
     });
 
@@ -313,8 +313,7 @@ export async function getPublicFundersGrouped(): Promise<PublicFundersGrouped> {
   try {
     const response = await fetch(endpoint, {
       next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: ["funders"],
+        tags: [CACHE_TAGS.funders],
       },
     });
 
@@ -349,8 +348,7 @@ export async function getPublicStatistics(): Promise<PublicStatistic[]> {
   try {
     const response = await fetch(endpoint, {
       next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: ["statistics"],
+        tags: [CACHE_TAGS.statistics],
       },
     });
 
@@ -397,8 +395,7 @@ export async function getPublicActionLines(): Promise<
   try {
     const response = await fetch(endpoint, {
       next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: ["action-lines"],
+        tags: [CACHE_TAGS.actionLines],
       },
     });
 
@@ -427,8 +424,7 @@ export async function getPublicActionLineBySlug(
   try {
     response = await fetch(endpoint, {
       next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: ["action-lines", `action-line-${slug}`],
+        tags: [CACHE_TAGS.actionLines],
       },
     });
   } catch {
@@ -473,8 +469,7 @@ export async function getPublicSiteSettings(): Promise<PublicSiteSettings | null
   try {
     const response = await fetch(endpoint, {
       next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: ["settings"],
+        tags: [CACHE_TAGS.settings],
       },
     });
 
@@ -484,6 +479,41 @@ export async function getPublicSiteSettings(): Promise<PublicSiteSettings | null
 
     const payload: unknown = await response.json();
     return parseSiteSettings(payload);
+  } catch {
+    return null;
+  }
+}
+
+function buildPublicAboutUrl() {
+  const baseUrl = getApiBaseUrl();
+
+  if (!baseUrl) {
+    return null;
+  }
+
+  return `${baseUrl}/public/about`;
+}
+
+export async function getPublicAboutUs(): Promise<PublicAboutUs | null> {
+  const endpoint = buildPublicAboutUrl();
+
+  if (!endpoint) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(endpoint, {
+      next: {
+        tags: [CACHE_TAGS.about],
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload: unknown = await response.json();
+    return parseAboutUs(payload);
   } catch {
     return null;
   }
@@ -521,8 +551,7 @@ export async function getPublicPagesMenu(): Promise<
   try {
     const response = await fetch(endpoint, {
       next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: ["pages", "pages-menu"],
+        tags: [CACHE_TAGS.pages],
       },
     });
 
@@ -552,8 +581,7 @@ export async function getPublicInstitutionalPageBySlug(
   try {
     response = await fetch(endpoint, {
       next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: ["pages", `page-${slug}`],
+        tags: [CACHE_TAGS.pages],
       },
     });
   } catch {
@@ -641,8 +669,7 @@ export async function getPublicEventsPage(
   try {
     const response = await fetch(endpoint, {
       next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: ["events"],
+        tags: [CACHE_TAGS.agenda],
       },
     });
 
@@ -682,8 +709,7 @@ export async function getPublicEventBySlug(slug: string): Promise<PublicEvent> {
 
   const response = await fetch(endpoint, {
     next: {
-      revalidate: REVALIDATE_SECONDS,
-      tags: ["events", `event-${slug}`],
+      tags: [CACHE_TAGS.agenda],
     },
   });
 
@@ -718,9 +744,13 @@ export function getPublicPostPath(post: Pick<PublicPost, "id" | "slug">) {
 }
 
 export function getPublicPostCoverUrl(post: PublicPost) {
+  const firstGalleryImage = post.blocks?.find(
+    (b) => b.type === "GALLERY" && b.galleryUrls?.length,
+  )?.galleryUrls?.[0];
+
   return (
     resolvePublicMediaUrl(post.coverImageUrl) ||
-    resolvePublicMediaUrl(post.galleryImages?.[0]) ||
+    resolvePublicMediaUrl(firstGalleryImage) ||
     "/placeholder.svg"
   );
 }

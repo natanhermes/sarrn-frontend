@@ -9,6 +9,7 @@ import { ProjetosSection } from "@/components/public/projetos-section";
 import { QuemSomos } from "@/components/public/quem-somos";
 import { WhereWeAreSection } from "@/components/public/where-we-are-section";
 import {
+  getPublicAboutUs,
   getPublicActionLines,
   getPublicCarouselSlides,
   getPublicFundersGrouped,
@@ -33,6 +34,7 @@ export default async function HomePage() {
     actionLines,
     settings,
     statistics,
+    aboutUs,
   ] = await Promise.all([
     getPublicPosts("PROJECT", 3),
     getPublicPosts("NEWS", 4),
@@ -41,6 +43,7 @@ export default async function HomePage() {
     getPublicActionLines(),
     getPublicSiteSettings(),
     getPublicStatistics(),
+    getPublicAboutUs(),
   ]);
 
   const heroSlides = carouselSlides.map((slide) => ({
@@ -58,7 +61,7 @@ export default async function HomePage() {
   return (
     <main>
       <HeroCarousel slides={heroSlides} />
-      <QuemSomos statistics={statistics} />
+      <QuemSomos aboutUs={aboutUs} statistics={statistics} />
       <NoticiasSection news={news} />
       <ProjetosSection projects={projects} />
       <ActionLinesSection actionLines={actionLines} />

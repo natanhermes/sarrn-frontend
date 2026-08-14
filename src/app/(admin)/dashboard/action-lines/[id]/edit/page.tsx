@@ -92,6 +92,7 @@ export default function EditActionLinePage() {
 
       <ActionLineForm
         defaultValues={{
+          storageId: line.storageId,
           iconUrl: line.iconUrl,
           coverImageUrl: line.coverImageUrl,
           title: line.title,

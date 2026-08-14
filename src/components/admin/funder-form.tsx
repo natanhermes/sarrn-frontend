@@ -3,7 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import { useMemo } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { CoverImageUpload } from "@/components/admin/cover-image-upload";
 import { Button } from "@/components/ui/button";
@@ -37,9 +38,15 @@ export function FunderForm({
 }: FunderFormProps) {
   const router = useRouter();
 
+  const initialStorageId = useMemo(
+    () => defaultValues?.storageId || crypto.randomUUID(),
+    [defaultValues?.storageId],
+  );
+
   const form = useForm<FunderFormValues>({
     resolver: zodResolver(funderFormSchema),
     defaultValues: {
+      storageId: initialStorageId,
       logoUrl: defaultValues?.logoUrl ?? "",
       name: defaultValues?.name ?? "",
       siteUrl: defaultValues?.siteUrl ?? "",
@@ -47,6 +54,12 @@ export function FunderForm({
       displayOrder: defaultValues?.displayOrder ?? 0,
     },
   });
+
+  const watchStorageId = useWatch({
+    control: form.control,
+    name: "storageId",
+  });
+  const currentStorageId = watchStorageId || initialStorageId;
 
   async function handleSubmit(values: FunderFormValues) {
     await onSubmit(toFunderSubmitPayload(values));
@@ -68,6 +81,7 @@ export function FunderForm({
                 value={field.value}
                 onChange={field.onChange}
                 disabled={isSubmitting}
+                storagePath={`apoiadores/${currentStorageId}/logo`}
               />
               <FieldDescription>
                 Preferencialmente PNG ou SVG com fundo transparente.

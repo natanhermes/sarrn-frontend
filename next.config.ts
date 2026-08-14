@@ -35,22 +35,22 @@ const nextConfig: NextConfig = {
       ...apiRemotePatterns(),
       {
         protocol: "https",
+        hostname: "sarrn-storage.sfo3.digitaloceanspaces.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.digitaloceanspaces.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "images.unsplash.com",
         pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "picsum.photos",
-        pathname: "/**",
-      },
-      {
-        protocol: "http",
-        hostname: "localhost",
-        pathname: "/**",
-      },
-      {
-        protocol: "http",
-        hostname: "127.0.0.1",
         pathname: "/**",
       },
     ],

@@ -3,15 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 
 import { CoAuthorsSelect } from "@/components/admin/co-authors-select";
+import { ContentBlocksField } from "@/components/admin/content-blocks-field";
 import { CoverImageUpload } from "@/components/admin/cover-image-upload";
-import { GalleryImagesUpload } from "@/components/admin/gallery-images-upload";
-import { PdfAttachmentsUpload } from "@/components/admin/pdf-attachments-upload";
-import { QuillEditor } from "@/components/admin/quill-editor";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -35,7 +33,7 @@ import {
   canSetPostStatus,
   resolvePostStatusForSubmit,
 } from "@/lib/post-permissions";
-import { sanitizeRichText } from "@/lib/sanitize-html";
+import { emptyContentBlock } from "@/schemas/content-blocks";
 import {
   executionStatusSelectItems,
   postFormSchema,
@@ -76,21 +74,27 @@ export function PostForm({
     : (defaultValues?.status ?? "DRAFT");
   const initialType = defaultValues?.type ?? defaultType;
 
+  const initialStorageId = useMemo(
+    () => defaultValues?.storageId || crypto.randomUUID(),
+    [defaultValues?.storageId],
+  );
+
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postFormSchema),
     defaultValues: {
+      storageId: initialStorageId,
       type: initialType,
       title: defaultValues?.title ?? "",
       summary: defaultValues?.summary ?? "",
       coverImageUrl: defaultValues?.coverImageUrl ?? "",
-      richTextContent: defaultValues?.richTextContent ?? "",
+      blocks: defaultValues?.blocks?.length
+        ? defaultValues.blocks
+        : [emptyContentBlock("TEXT")],
       status: initialStatus,
       manualPublishedAt:
         initialType !== "PROJECT" &&
         (initialStatus === "SCHEDULED" || Boolean(initialPublishedAt)),
       publishedAt: initialPublishedAt,
-      galleryImages: defaultValues?.galleryImages ?? [],
-      attachmentUrls: defaultValues?.attachmentUrls ?? [],
       coAuthorIds: defaultValues?.coAuthorIds ?? [],
       projectDetails: {
         generalObjective:
@@ -104,10 +108,14 @@ export function PostForm({
     },
   });
 
-  const [selectedType, publicationStatus, manualPublishedAt] = useWatch({
-    control: form.control,
-    name: ["type", "status", "manualPublishedAt"],
-  });
+  const [selectedType, publicationStatus, manualPublishedAt, watchStorageId] =
+    useWatch({
+      control: form.control,
+      name: ["type", "status", "manualPublishedAt", "storageId"],
+    });
+
+  const currentStorageId = watchStorageId || initialStorageId;
+  const postTypeFolder = (selectedType || initialType).toLowerCase();
   const showProjectDetails = selectedType === "PROJECT";
   const showPublishedAtControls = selectedType !== "PROJECT";
   const isScheduled = publicationStatus === "SCHEDULED";
@@ -153,10 +161,7 @@ export function PostForm({
     const currentUser = useAuth.getState().user ?? getAuthUser();
     const sanitized: PostFormValues = {
       ...values,
-      richTextContent: sanitizeRichText(values.richTextContent),
       status: resolvePostStatusForSubmit(currentUser, values.status),
-      galleryImages: values.galleryImages ?? [],
-      attachmentUrls: values.attachmentUrls ?? [],
       coAuthorIds: (values.coAuthorIds ?? []).filter(
         (id) => id !== currentUser?.id,
       ),
@@ -556,69 +561,22 @@ export function PostForm({
                 value={field.value}
                 onChange={field.onChange}
                 disabled={isSubmitting}
+                storagePath={`posts/${postTypeFolder}/${currentStorageId}/cover`}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
         />
 
-        <Controller
-          name="richTextContent"
+        <ContentBlocksField
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Conteúdo</FieldLabel>
-              <FieldDescription>
-                Use títulos e parágrafos para estruturar o texto. Arraste, cole
-                ou use o botão de imagem para enviar mídias ao storage.
-              </FieldDescription>
-              <QuillEditor
-                value={field.value}
-                onChange={field.onChange}
-                disabled={isSubmitting}
-                invalid={fieldState.invalid}
-              />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-
-        <Controller
-          name="attachmentUrls"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Anexos (PDF)</FieldLabel>
-              <FieldDescription>
-                Opcional. Você pode adicionar um ou mais documentos.
-              </FieldDescription>
-              <PdfAttachmentsUpload
-                value={field.value}
-                onChange={field.onChange}
-                disabled={isSubmitting}
-              />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-
-        <Controller
-          name="galleryImages"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Galeria de fotos</FieldLabel>
-              <FieldDescription>
-                Opcional. Disponível para qualquer tipo de publicação.
-              </FieldDescription>
-              <GalleryImagesUpload
-                value={field.value}
-                onChange={field.onChange}
-                disabled={isSubmitting}
-              />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
+          name="blocks"
+          disabled={isSubmitting}
+          baseStoragePath={`posts/${postTypeFolder}/${currentStorageId}/blocks`}
+          errorsMessage={
+            form.formState.errors.blocks?.root?.message ||
+            form.formState.errors.blocks?.message
+          }
         />
       </FieldGroup>
 

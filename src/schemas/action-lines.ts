@@ -28,11 +28,14 @@ export const actionLineSchema = z
     is_active: z.boolean().nullish(),
     displayOrder: z.coerce.number().nullish(),
     display_order: z.coerce.number().nullish(),
+    storageId: z.string().nullable().optional(),
+    storage_id: z.string().nullable().optional(),
     blocks: z.array(actionLineBlockSchema).nullish(),
   })
   .passthrough()
   .transform((line) => ({
     id: line.id,
+    storageId: line.storageId || line.storage_id || undefined,
     title: line.title,
     slug: line.slug,
     iconUrl: line.iconUrl || line.icon_url || "",
@@ -53,10 +56,13 @@ export const actionLineSummarySchema = z
     iconUrl: z.string().nullish(),
     icon_url: z.string().nullish(),
     summary: z.string().nullish(),
+    storageId: z.string().nullable().optional(),
+    storage_id: z.string().nullable().optional(),
   })
   .passthrough()
   .transform((line) => ({
     id: line.id,
+    storageId: line.storageId || line.storage_id || undefined,
     title: line.title,
     slug: line.slug,
     iconUrl: line.iconUrl || line.icon_url || "",
@@ -64,6 +70,7 @@ export const actionLineSummarySchema = z
   }));
 
 export const actionLineFormSchema = z.object({
+  storageId: z.string().optional(),
   iconUrl: z.string().min(1, "Envie o ícone da linha de atuação"),
   coverImageUrl: z.string().optional(),
   title: z
@@ -183,6 +190,7 @@ function optionalOrNull(value?: string | null) {
 
 export function toActionLineSubmitPayload(values: ActionLineFormValues) {
   return {
+    storageId: values.storageId || undefined,
     iconUrl: values.iconUrl.trim(),
     coverImageUrl: optionalOrNull(values.coverImageUrl),
     title: values.title.trim(),

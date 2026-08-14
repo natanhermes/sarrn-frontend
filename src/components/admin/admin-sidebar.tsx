@@ -6,6 +6,7 @@ import {
   FileTextIcon,
   HandshakeIcon,
   ImagesIcon,
+  InfoIcon,
   LayoutDashboardIcon,
   LayersIcon,
   NewspaperIcon,
@@ -38,6 +39,12 @@ const navItems: NavItem[] = [
     href: "/dashboard/users",
     icon: UsersIcon,
     adminOnly: true,
+  },
+  {
+    label: "Quem Somos",
+    href: "/dashboard/about",
+    icon: InfoIcon,
+    roles: ["ADMIN", "EDITOR"],
   },
   {
     label: "Publicações",

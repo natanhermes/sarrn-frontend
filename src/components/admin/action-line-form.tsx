@@ -3,7 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import { useMemo } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { ContentBlocksField } from "@/components/admin/content-blocks-field";
 import { CoverImageUpload } from "@/components/admin/cover-image-upload";
@@ -40,9 +41,15 @@ export function ActionLineForm({
 }: ActionLineFormProps) {
   const router = useRouter();
 
+  const initialStorageId = useMemo(
+    () => defaultValues?.storageId || crypto.randomUUID(),
+    [defaultValues?.storageId],
+  );
+
   const form = useForm<ActionLineFormValues>({
     resolver: zodResolver(actionLineFormSchema),
     defaultValues: {
+      storageId: initialStorageId,
       iconUrl: defaultValues?.iconUrl ?? "",
       coverImageUrl: defaultValues?.coverImageUrl ?? "",
       title: defaultValues?.title ?? "",
@@ -55,6 +62,12 @@ export function ActionLineForm({
         : [emptyContentBlock("TEXT")],
     },
   });
+
+  const watchStorageId = useWatch({
+    control: form.control,
+    name: "storageId",
+  });
+  const currentStorageId = watchStorageId || initialStorageId;
 
   async function handleSubmit(values: ActionLineFormValues) {
     await onSubmit(toActionLineSubmitPayload(values));
@@ -77,6 +90,7 @@ export function ActionLineForm({
                 emptyLabel="Nenhum ícone selecionado"
                 onChange={field.onChange}
                 disabled={isSubmitting}
+                storagePath={`linhas-de-atuacao/${currentStorageId}/icon`}
               />
               <FieldDescription>
                 Imagem quadrada recomendada (PNG ou SVG). Exibida na Home.
@@ -99,6 +113,7 @@ export function ActionLineForm({
                 value={field.value}
                 onChange={field.onChange}
                 disabled={isSubmitting}
+                storagePath={`linhas-de-atuacao/${currentStorageId}/cover`}
               />
               <FieldDescription>
                 Preferencialmente imagem horizontal em alta resolução.
@@ -233,6 +248,7 @@ export function ActionLineForm({
       <ContentBlocksField
         control={form.control}
         disabled={isSubmitting}
+        baseStoragePath={`linhas-de-atuacao/${currentStorageId}/blocks`}
         errorsMessage={
           form.formState.errors.blocks?.root?.message ||
           form.formState.errors.blocks?.message

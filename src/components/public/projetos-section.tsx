@@ -13,20 +13,16 @@ type ProjetosSectionProps = {
 
 export function ProjetosSection({ projects }: ProjetosSectionProps) {
   return (
-    <section id="projetos" className="bg-secondary/50 py-24 md:py-32">
-      <div className="mx-auto max-w-6xl px-5 md:px-8">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+    <section id="projetos" className="bg-secondary/50 px-5 md:px-8 py-12 md:py-12">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div className="max-w-xl">
-            <span className="text-sm font-semibold tracking-widest text-brand-orange uppercase">
+            <span className="text-lg font-semibold tracking-widest text-brand-green uppercase">
               Projetos em ação
             </span>
             <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-balance leading-tight md:text-4xl">
               Iniciativas que germinam mudanças reais
             </h2>
-            <p className="mt-4 max-w-sm leading-relaxed text-pretty text-muted-foreground">
-              Do campo à sala de aula, conheça as frentes de trabalho que movem a
-              SARRN todos os dias.
-            </p>
           </div>
           <Button
             variant="outline"
@@ -59,7 +55,7 @@ export function ProjetosSection({ projects }: ProjetosSectionProps) {
                   href={getPublicPostPath(projeto)}
                   className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-black/5"
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden">
+                  <div className="relative aspect-4/3 overflow-hidden">
                     <img
                       src={cover}
                       alt={projeto.title}
