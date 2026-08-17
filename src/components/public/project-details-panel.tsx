@@ -10,11 +10,28 @@ import {
 
 type ProjectDetailsPanelProps = {
   details: ProjectDetails;
+  funders?: { id?: string; name: string }[] | null;
 };
 
-export function ProjectDetailsPanel({ details }: ProjectDetailsPanelProps) {
-  const funderName =
-    details.funder?.name?.trim() || details.funderName?.trim() || "—";
+export function ProjectDetailsPanel({
+  details,
+  funders,
+}: ProjectDetailsPanelProps) {
+  const fundersList =
+    funders && funders.length > 0
+      ? funders
+      : details.funders && details.funders.length > 0
+        ? details.funders
+        : details.funder
+          ? [details.funder]
+          : [];
+
+  const funderNames = fundersList
+    .map((f) => f.name?.trim())
+    .filter(Boolean)
+    .join(", ");
+
+  const funderDisplay = funderNames || details.funderName?.trim() || "—";
 
   return (
     <section className="mt-10 rounded-3xl border border-border bg-secondary/40 p-6 md:p-8">
@@ -23,7 +40,9 @@ export function ProjectDetailsPanel({ details }: ProjectDetailsPanelProps) {
           Detalhes do projeto
         </h2>
         <Badge variant="secondary">
-          {executionStatusLabels[details.executionStatus]}
+          {details.executionStatus
+            ? executionStatusLabels[details.executionStatus]
+            : "—"}
         </Badge>
       </div>
 
@@ -41,7 +60,7 @@ export function ProjectDetailsPanel({ details }: ProjectDetailsPanelProps) {
           <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             Financiador
           </p>
-          <p className="mt-2 text-sm font-medium">{funderName}</p>
+          <p className="mt-2 text-sm font-medium">{funderDisplay}</p>
         </div>
 
         <div>

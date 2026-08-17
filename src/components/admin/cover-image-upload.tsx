@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { canDeleteMedia } from "@/lib/post-permissions";
 import { resolvePublicMediaUrl } from "@/lib/public-api";
-import { IMAGE_ACCEPT, uploadImage } from "@/lib/upload";
+import { isVideoUrl, MEDIA_ACCEPT, uploadImage } from "@/lib/upload";
 import { useAuth } from "@/store/useAuth";
 
 type CoverImageUploadProps = {
@@ -25,7 +25,7 @@ export function CoverImageUpload({
   value,
   onChange,
   disabled = false,
-  emptyLabel = "Nenhuma imagem de capa",
+  emptyLabel = "Nenhuma mídia de capa",
   aspectRatio,
   storagePath,
 }: CoverImageUploadProps) {
@@ -53,10 +53,10 @@ export function CoverImageUpload({
     try {
       const url = await uploadImage(file, storagePath);
       onChange(url);
-      toast.success("Imagem enviada com sucesso");
+      toast.success("Mídia enviada com sucesso");
     } catch (error) {
       toast.error(
-        getApiErrorMessage(error, "Não foi possível enviar a imagem."),
+        getApiErrorMessage(error, "Não foi possível enviar o arquivo."),
       );
     } finally {
       setIsUploading(false);
@@ -67,13 +67,14 @@ export function CoverImageUpload({
   }
 
   const previewUrl = value ? resolvePublicMediaUrl(value) || value : null;
+  const isVideo = isVideoUrl(previewUrl);
 
   return (
     <div className="space-y-3">
       <input
         ref={inputRef}
         type="file"
-        accept={IMAGE_ACCEPT}
+        accept={MEDIA_ACCEPT}
         className="hidden"
         disabled={disabled || isUploading}
         onChange={(event) => handleFileChange(event.target.files?.[0])}
@@ -81,19 +82,28 @@ export function CoverImageUpload({
 
       {previewUrl ? (
         <div className="relative flex items-center justify-center rounded-lg border border-border bg-muted/20 p-3">
-          <Image
-            src={previewUrl}
-            alt="Capa da publicação"
-            unoptimized
-            width={400}
-            height={400}
-            className="max-h-56 max-w-full w-auto h-auto object-contain rounded-md"
-          />
+          {isVideo ? (
+            <video
+              src={previewUrl}
+              controls
+              preload="metadata"
+              playsInline
+              controlsList="nodownload"
+              className="max-h-56 max-w-full w-auto h-auto object-contain rounded-md"
+            />
+          ) : (
+            <Image
+              src={previewUrl}
+              alt="Capa da publicação"
+              unoptimized
+              width={400}
+              height={400}
+              className="max-h-56 max-w-full w-auto h-auto object-contain rounded-md"
+            />
+          )}
         </div>
       ) : (
-        <div className={emptyContainerClass}>
-          {emptyLabel}
-        </div>
+        <div className={emptyContainerClass}>{emptyLabel}</div>
       )}
 
       <div className="flex flex-wrap gap-2">
@@ -108,7 +118,7 @@ export function CoverImageUpload({
           ) : (
             <ImagePlusIcon />
           )}
-          {value ? "Trocar imagem" : "Enviar capa"}
+          {value ? "Trocar mídia" : "Enviar capa/mídia"}
         </Button>
 
         {value && allowDelete ? (

@@ -10,6 +10,7 @@ import {
   resolvePublicMediaUrl,
 } from "@/lib/public-api";
 import { postTypeLabels } from "@/schemas/posts";
+import { isVideoUrl } from "@/lib/upload";
 
 type PublicPostPageProps = {
   params: Promise<{ slug: string }>;
@@ -66,14 +67,25 @@ export default async function PublicPostPage({ params }: PublicPostPageProps) {
     <main className="pb-20">
       <section className="relative isolate min-h-[min(70vh,40rem)] overflow-hidden bg-brand-black text-white">
         {coverImage ? (
-          <Image
-            src={coverImage}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover opacity-45"
-          />
+          isVideoUrl(coverImage) ? (
+            <video
+              src={coverImage}
+              controls
+              preload="metadata"
+              playsInline
+              controlsList="nodownload"
+              className="absolute inset-0 h-full w-full object-cover opacity-60 z-0"
+            />
+          ) : (
+            <Image
+              src={coverImage}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover opacity-45"
+            />
+          )
         ) : (
           <div className="absolute inset-0 bg-linear-to-br from-brand-green/40 via-brand-black to-brand-black" />
         )}
@@ -108,7 +120,10 @@ export default async function PublicPostPage({ params }: PublicPostPageProps) {
         ) : null}
 
         {post.type === "PROJECT" && post.projectDetails ? (
-          <ProjectDetailsPanel details={post.projectDetails} />
+          <ProjectDetailsPanel
+            details={post.projectDetails}
+            funders={post.funders}
+          />
         ) : null}
 
         <div className="mt-12">

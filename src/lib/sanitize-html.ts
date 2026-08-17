@@ -8,6 +8,8 @@ export function sanitizeRichText(html: string | null | undefined): string {
   const clean = sanitizeHtml(html, {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat([
       "img",
+      "video",
+      "source",
       "iframe",
       "h1",
       "h2",
@@ -18,6 +20,19 @@ export function sanitizeRichText(html: string | null | undefined): string {
       ...sanitizeHtml.defaults.allowedAttributes,
       "*": ["style", "class", "id"],
       img: ["src", "alt", "width", "height", "title"],
+      video: [
+        "src",
+        "controls",
+        "preload",
+        "playsinline",
+        "controlslist",
+        "width",
+        "height",
+        "title",
+        "class",
+        "style",
+      ],
+      source: ["src", "type"],
       iframe: ["src", "allowfullscreen", "frameborder", "allow", "title"],
       a: ["href", "name", "target", "rel"],
     },
@@ -28,7 +43,7 @@ export function sanitizeRichText(html: string | null | undefined): string {
 }
 
 export function isRichTextEmpty(html: string) {
-  if (/<img\b/i.test(html)) {
+  if (/<(img|video)\b/i.test(html)) {
     return false;
   }
 

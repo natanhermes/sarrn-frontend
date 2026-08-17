@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
 
+import { PasswordChangeForm } from "@/components/admin/password-change-form";
 import { SiteSettingsForm } from "@/components/admin/site-settings-form";
 import { useRequireAdmin } from "@/hooks/use-require-admin";
 import api from "@/lib/api";
@@ -82,13 +83,13 @@ export default function SettingsPage() {
   const settings = settingsQuery.data;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 md:px-6 md:py-8">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-6 md:px-6 md:py-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
           Configurações
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Gerencie os dados globais do portal institucional.
+          Gerencie os dados globais do portal institucional e a segurança da sua conta.
         </p>
       </div>
 
@@ -100,6 +101,18 @@ export default function SettingsPage() {
           await updateMutation.mutateAsync(values);
         }}
       />
+
+      <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">
+            Segurança da Conta
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Altere a sua senha de acesso ao painel administrativo.
+          </p>
+        </div>
+        <PasswordChangeForm />
+      </div>
     </main>
   );
 }

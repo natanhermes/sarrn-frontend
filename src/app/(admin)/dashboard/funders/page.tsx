@@ -5,10 +5,12 @@ import {
   Loader2Icon,
   PencilIcon,
   PlusIcon,
+  SearchIcon,
   Trash2Icon,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -23,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -34,12 +37,31 @@ import {
 import { useRequireEditor } from "@/hooks/use-require-editor";
 import api from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { formatCnpj } from "@/lib/format";
 import { parseFundersList, type Funder } from "@/schemas/funders";
 
-export default function FundersPage() {
+function FundersPageContent() {
   const { shouldRender, isChecking } = useRequireEditor();
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [funderToDelete, setFunderToDelete] = useState<Funder | null>(null);
+
+  const initialSearch =
+    searchParams.get("search") ?? searchParams.get("q") ?? "";
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+
+  function handleSearchChange(term: string) {
+    setSearchQuery(term);
+    const params = new URLSearchParams(searchParams.toString());
+    if (term.trim()) {
+      params.set("search", term);
+    } else {
+      params.delete("search");
+    }
+    router.replace(`?${params.toString()}`);
+  }
 
   const fundersQuery = useQuery({
     queryKey: ["admin-funders"],
@@ -80,6 +102,28 @@ export default function FundersPage() {
   }
 
   const funders = fundersQuery.data ?? [];
+  const activeSearch = (
+    searchParams.get("search") ??
+    searchParams.get("q") ??
+    searchQuery
+  )
+    .trim()
+    .toLowerCase();
+  const searchDigits = activeSearch.replace(/\D/g, "");
+
+  const filteredFunders = funders.filter((funder) => {
+    if (!activeSearch) return true;
+
+    const nameMatch = funder.name.toLowerCase().includes(activeSearch);
+
+    const funderCnpjDigits = funder.cnpj ? funder.cnpj.replace(/\D/g, "") : "";
+    const cnpjMatch = funder.cnpj
+      ? funder.cnpj.toLowerCase().includes(activeSearch) ||
+        (searchDigits.length > 0 && funderCnpjDigits.includes(searchDigits))
+      : false;
+
+    return nameMatch || cnpjMatch;
+  });
 
   return (
     <main className="flex flex-1 flex-col gap-6 px-4 py-6 md:px-6 md:py-8">
@@ -99,6 +143,17 @@ export default function FundersPage() {
         </Link>
       </div>
 
+      <div className="relative max-w-sm">
+        <SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Buscar por nome ou CNPJ..."
+          value={searchQuery}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       {fundersQuery.isLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2Icon className="size-4 animate-spin" />
@@ -115,6 +170,10 @@ export default function FundersPage() {
         <p className="text-sm text-muted-foreground">
           Nenhum apoiador cadastrado. Adicione o primeiro parceiro da Home.
         </p>
+      ) : filteredFunders.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Nenhum apoiador encontrado para a busca.
+        </p>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
           <Table>
@@ -122,13 +181,14 @@ export default function FundersPage() {
               <TableRow>
                 <TableHead className="w-22">Logo</TableHead>
                 <TableHead>Nome</TableHead>
+                <TableHead className="w-44">CNPJ</TableHead>
                 <TableHead className="w-25">Ordem</TableHead>
                 <TableHead className="w-30">Status</TableHead>
                 <TableHead className="w-30 text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {funders.map((funder) => (
+              {filteredFunders.map((funder) => (
                 <TableRow key={funder.id}>
                   <TableCell>
                     <img
@@ -139,6 +199,9 @@ export default function FundersPage() {
                   </TableCell>
                   <TableCell className="max-w-xs font-medium">
                     <span className="line-clamp-2">{funder.name}</span>
+                  </TableCell>
+                  <TableCell className="text-sm font-mono text-muted-foreground">
+                    {formatCnpj(funder.cnpj) || "—"}
                   </TableCell>
                   <TableCell>{funder.displayOrder}</TableCell>
                   <TableCell>
@@ -212,5 +275,20 @@ export default function FundersPage() {
         </AlertDialogContent>
       </AlertDialog>
     </main>
+  );
+}
+
+export default function FundersPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex flex-1 items-center justify-center gap-2 px-6 py-16 text-sm text-muted-foreground">
+          <Loader2Icon className="size-4 animate-spin" />
+          Carregando...
+        </main>
+      }
+    >
+      <FundersPageContent />
+    </Suspense>
   );
 }

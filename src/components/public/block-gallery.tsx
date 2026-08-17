@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { resolvePublicMediaUrl } from "@/lib/public-api";
+import { isVideoUrl } from "@/lib/upload";
 import { cn } from "@/lib/utils";
 
 type BlockGalleryProps = {
@@ -23,14 +24,28 @@ export function BlockGallery({ images, title }: BlockGalleryProps) {
   }
 
   if (items.length === 1) {
+    const singleUrl = items[0];
+    const isVid = isVideoUrl(singleUrl);
+
     return (
       <div className="w-full max-w-full overflow-hidden rounded-2xl border border-border bg-muted/20">
-        <img
-          src={items[0]}
-          alt={`${title} — imagem 1`}
-          className="aspect-[16/10] h-auto w-full max-w-full object-cover"
-          loading="lazy"
-        />
+        {isVid ? (
+          <video
+            src={singleUrl}
+            controls
+            preload="metadata"
+            playsInline
+            controlsList="nodownload"
+            className="aspect-[16/10] h-auto w-full max-w-full object-cover"
+          />
+        ) : (
+          <img
+            src={singleUrl}
+            alt={`${title} — mídia 1`}
+            className="aspect-[16/10] h-auto w-full max-w-full object-cover"
+            loading="lazy"
+          />
+        )}
       </div>
     );
   }
@@ -47,21 +62,44 @@ export function BlockGallery({ images, title }: BlockGalleryProps) {
   return (
     <div className="relative w-full max-w-full overflow-hidden rounded-2xl border border-border bg-muted/20">
       <div className="relative aspect-[16/10] w-full overflow-hidden">
-        {items.map((url, index) => (
-          <img
-            key={`${url}-${index}`}
-            src={url}
-            alt={`${title} — imagem ${index + 1}`}
-            className={cn(
-              "absolute inset-0 h-full w-full max-w-full object-cover transition-opacity duration-500",
-              index === activeIndex ? "opacity-100" : "opacity-0",
-            )}
-            loading={index === 0 ? "eager" : "lazy"}
-          />
-        ))}
+        {items.map((url, index) => {
+          const isVid = isVideoUrl(url);
+
+          if (isVid) {
+            return (
+              <video
+                key={`${url}-${index}`}
+                src={url}
+                controls
+                preload="metadata"
+                playsInline
+                controlsList="nodownload"
+                className={cn(
+                  "absolute inset-0 h-full w-full max-w-full object-cover transition-opacity duration-500",
+                  index === activeIndex
+                    ? "opacity-100 pointer-events-auto z-10"
+                    : "opacity-0 pointer-events-none z-0",
+                )}
+              />
+            );
+          }
+
+          return (
+            <img
+              key={`${url}-${index}`}
+              src={url}
+              alt={`${title} — mídia ${index + 1}`}
+              className={cn(
+                "absolute inset-0 h-full w-full max-w-full object-cover transition-opacity duration-500",
+                index === activeIndex ? "opacity-100 z-10" : "opacity-0 z-0",
+              )}
+              loading={index === 0 ? "eager" : "lazy"}
+            />
+          );
+        })}
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 bg-gradient-to-t from-brand-black/70 to-transparent p-4">
+      <div className="absolute inset-x-0 bottom-0 z-20 flex items-center justify-between gap-3 bg-gradient-to-t from-brand-black/70 to-transparent p-4">
         <p className="text-sm font-medium text-white">
           {activeIndex + 1} / {items.length}
         </p>
@@ -70,7 +108,7 @@ export function BlockGallery({ images, title }: BlockGalleryProps) {
             type="button"
             size="icon-sm"
             variant="secondary"
-            aria-label="Imagem anterior"
+            aria-label="Mídia anterior"
             onClick={() => goTo(-1)}
           >
             <ChevronLeft />
@@ -79,7 +117,7 @@ export function BlockGallery({ images, title }: BlockGalleryProps) {
             type="button"
             size="icon-sm"
             variant="secondary"
-            aria-label="Próxima imagem"
+            aria-label="Próxima mídia"
             onClick={() => goTo(1)}
           >
             <ChevronRight />

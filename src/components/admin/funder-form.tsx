@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
+import { PatternFormat } from "react-number-format";
+
 import { CoverImageUpload } from "@/components/admin/cover-image-upload";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +51,7 @@ export function FunderForm({
       storageId: initialStorageId,
       logoUrl: defaultValues?.logoUrl ?? "",
       name: defaultValues?.name ?? "",
+      cnpj: defaultValues?.cnpj ?? "",
       siteUrl: defaultValues?.siteUrl ?? "",
       isActive: defaultValues?.isActive ?? true,
       displayOrder: defaultValues?.displayOrder ?? 0,
@@ -103,6 +106,35 @@ export function FunderForm({
                 disabled={isSubmitting}
                 {...field}
               />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <Controller
+          control={form.control}
+          name="cnpj"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="funder-cnpj">CNPJ (opcional)</FieldLabel>
+              <PatternFormat
+                id="funder-cnpj"
+                customInput={Input}
+                format="##.###.###/####-##"
+                mask="_"
+                placeholder="00.000.000/0000-00"
+                disabled={isSubmitting}
+                value={field.value ?? ""}
+                onValueChange={(values) => {
+                  field.onChange(values.formattedValue);
+                }}
+                onBlur={field.onBlur}
+                getInputRef={field.ref}
+                aria-invalid={fieldState.invalid}
+              />
+              <FieldDescription>
+                CNPJ da instituição financiadora ou parceira.
+              </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}

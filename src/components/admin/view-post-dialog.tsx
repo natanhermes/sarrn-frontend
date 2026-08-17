@@ -19,6 +19,7 @@ import {
   postStatusLabels,
   type AdminPost,
 } from "@/schemas/posts";
+import { isVideoUrl } from "@/lib/upload";
 
 type ViewPostDialogProps = {
   post: AdminPost | null;
@@ -81,11 +82,22 @@ export function ViewPostDialog({
 
             {post.coverImageUrl?.trim() ? (
               <div className="flex max-h-64 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/20">
-                <img
-                  src={post.coverImageUrl}
-                  alt={`Capa de ${post.title}`}
-                  className="max-h-64 max-w-full object-contain"
-                />
+                {isVideoUrl(post.coverImageUrl) ? (
+                  <video
+                    src={post.coverImageUrl}
+                    controls
+                    preload="metadata"
+                    playsInline
+                    controlsList="nodownload"
+                    className="max-h-64 max-w-full object-contain"
+                  />
+                ) : (
+                  <img
+                    src={post.coverImageUrl}
+                    alt={`Capa de ${post.title}`}
+                    className="max-h-64 max-w-full object-contain"
+                  />
+                )}
               </div>
             ) : null}
 
@@ -105,7 +117,9 @@ export function ViewPostDialog({
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-semibold">Detalhes do projeto</p>
                   <Badge variant="secondary">
-                    {executionStatusLabels[details.executionStatus]}
+                    {details.executionStatus
+                      ? executionStatusLabels[details.executionStatus]
+                      : "—"}
                   </Badge>
                 </div>
 

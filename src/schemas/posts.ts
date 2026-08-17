@@ -24,14 +24,12 @@ export const executionStatusSchema = z.enum([
 
 export const projectDetailsSchema = z
   .object({
-    generalObjective: z.string().min(1, "Informe o objetivo geral"),
+    generalObjective: z.string().optional().nullable(),
     startDate: z.string().optional().nullable(),
     endDate: z.string().optional().nullable(),
     durationText: z.string().optional().nullable(),
-    budgetValue: z.coerce
-      .number({ error: "Informe o valor do orçamento" })
-      .nonnegative("O orçamento não pode ser negativo"),
-    executionStatus: executionStatusSchema,
+    budgetValue: z.coerce.number().optional().nullable(),
+    executionStatus: executionStatusSchema.optional().nullable(),
     funderName: z.string().optional().nullable(),
     funder: z
       .object({
@@ -40,6 +38,19 @@ export const projectDetailsSchema = z
       })
       .nullable()
       .optional(),
+    funders: z
+      .array(
+        z.object({
+          id: z.union([z.string(), z.number()]).transform(String),
+          name: z.string(),
+        }),
+      )
+      .optional()
+      .nullable(),
+    funderIds: z
+      .array(z.union([z.string(), z.number()]).transform(String))
+      .optional()
+      .nullable(),
   })
   .passthrough();
 
@@ -69,6 +80,19 @@ export const postSchema = z
     blocks: z.array(contentBlockSchema).nullish(),
     projectDetails: projectDetailsSchema.nullable().optional(),
     project_details: projectDetailsSchema.nullable().optional(),
+    funderIds: z
+      .array(z.union([z.string(), z.number()]).transform(String))
+      .optional()
+      .nullable(),
+    funders: z
+      .array(
+        z.object({
+          id: z.union([z.string(), z.number()]).transform(String),
+          name: z.string(),
+        }),
+      )
+      .optional()
+      .nullable(),
     storageId: z.string().nullable().optional(),
     storage_id: z.string().nullable().optional(),
     authorId: z
@@ -96,6 +120,43 @@ export const postSchema = z
     const coAuthors = post.coAuthors ?? post.co_authors ?? [];
     const storageId = post.storageId || post.storage_id || undefined;
 
+    const rawFunderIds =
+      (post as Record<string, unknown>).funderIds ??
+      (post as Record<string, unknown>).funder_ids ??
+      post.projectDetails?.funderIds ??
+      (post.projectDetails as Record<string, unknown> | null)?.funder_ids ??
+      (post.project_details as Record<string, unknown> | null)?.funderIds ??
+      (post.project_details as Record<string, unknown> | null)?.funder_ids;
+
+    const rawFundersList =
+      (post as Record<string, unknown>).funders ??
+      post.projectDetails?.funders ??
+      (post.project_details as Record<string, unknown> | null)?.funders;
+
+    let funderIds: string[] = [];
+    if (Array.isArray(rawFunderIds)) {
+      funderIds = (rawFunderIds as (string | number)[]).map(String);
+    } else if (Array.isArray(rawFundersList)) {
+      funderIds = (rawFundersList as { id: string | number }[]).map((f) => String(f.id));
+    } else if (post.projectDetails?.funder?.id) {
+      funderIds = [String(post.projectDetails.funder.id)];
+    }
+
+    let funders: { id: string; name: string }[] = [];
+    if (Array.isArray(rawFundersList)) {
+      funders = (rawFundersList as { id: string | number; name: string }[]).map((f) => ({
+        id: String(f.id),
+        name: f.name,
+      }));
+    } else if (post.projectDetails?.funder?.name) {
+      funders = [
+        {
+          id: String(post.projectDetails.funder.id ?? ""),
+          name: post.projectDetails.funder.name,
+        },
+      ];
+    }
+
     return {
       id: post.id,
       storageId,
@@ -109,6 +170,8 @@ export const postSchema = z
         (a, b) => a.displayOrder - b.displayOrder,
       ),
       projectDetails: post.projectDetails ?? post.project_details ?? null,
+      funderIds,
+      funders,
       author: post.author
         ? {
             id: post.author.id,
@@ -160,13 +223,12 @@ export const postFormSchema = z
     title: z.string().min(1, "Informe o título"),
     summary: z.string().optional(),
     coverImageUrl: z.string().optional(),
-    blocks: z
-      .array(contentBlockFormSchema)
-      .min(1, "Adicione ao menos um bloco"),
+    blocks: z.array(contentBlockFormSchema),
     status: postStatusSchema,
     manualPublishedAt: z.boolean(),
     publishedAt: z.string().optional(),
     coAuthorIds: z.array(z.string()),
+    funderIds: z.array(z.string()),
     projectDetails: z
       .object({
         generalObjective: z.string().optional(),
@@ -194,31 +256,15 @@ export const postFormSchema = z
     if (values.type === "PROJECT") {
       const details = values.projectDetails;
 
-      if (!details?.generalObjective?.trim()) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["projectDetails", "generalObjective"],
-          message: "Informe o objetivo geral",
-        });
-      }
-
       if (
-        details?.budgetValue === undefined ||
-        Number.isNaN(details.budgetValue) ||
+        details?.budgetValue !== undefined &&
+        !Number.isNaN(details.budgetValue) &&
         details.budgetValue < 0
       ) {
         ctx.addIssue({
           code: "custom",
           path: ["projectDetails", "budgetValue"],
           message: "Informe um orçamento válido",
-        });
-      }
-
-      if (!details?.executionStatus) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["projectDetails", "executionStatus"],
-          message: "Selecione o status de execução",
         });
       }
 
@@ -329,6 +375,7 @@ export function parsePost(payload: unknown): AdminPost {
 
 export function toPostSubmitPayload(values: PostFormValues) {
   const coAuthorIds = (values.coAuthorIds ?? []).filter(Boolean);
+  const funderIds = (values.funderIds ?? []).filter(Boolean);
 
   const base = {
     storageId: values.storageId || undefined,
@@ -336,27 +383,33 @@ export function toPostSubmitPayload(values: PostFormValues) {
     title: values.title,
     summary: values.summary?.trim() || undefined,
     coverImageUrl: values.coverImageUrl?.trim() || undefined,
-    blocks: toBlocksSubmitPayload(values.blocks),
+    blocks: toBlocksSubmitPayload(values.blocks ?? []),
     status: values.status,
     coAuthorIds,
+    funderIds,
   };
 
   if (values.type === "PROJECT") {
-    const budgetValue = Number(values.projectDetails?.budgetValue);
+    const rawBudget = values.projectDetails?.budgetValue;
+    const budgetValue =
+      rawBudget !== undefined && !Number.isNaN(rawBudget)
+        ? Number(rawBudget)
+        : undefined;
     const startDate = values.projectDetails?.startDate?.trim();
     const endDate = values.projectDetails?.endDate?.trim();
 
     return {
       ...base,
       projectDetails: {
-        generalObjective: values.projectDetails?.generalObjective?.trim() ?? "",
+        generalObjective: values.projectDetails?.generalObjective?.trim() || undefined,
         ...(startDate ? { startDate } : {}),
         ...(endDate ? { endDate } : {}),
-        budgetValue,
+        ...(budgetValue !== undefined ? { budgetValue } : {}),
         executionStatus:
           values.status === "SCHEDULED"
             ? "PLANNED"
             : (values.projectDetails?.executionStatus ?? "ONGOING"),
+        funderIds,
       },
     };
   }

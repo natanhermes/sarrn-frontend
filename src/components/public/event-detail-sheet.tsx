@@ -19,6 +19,7 @@ import {
   type PublicEvent,
 } from "@/lib/public-api";
 import type { EventSummary } from "@/schemas/events";
+import { isVideoUrl } from "@/lib/upload";
 
 type EventDetailSheetProps = {
   event: EventSummary | null;
@@ -107,13 +108,24 @@ export function EventDetailSheet({
         <div className="flex flex-col gap-6 px-5 py-6">
           {coverSrc ? (
             <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-muted">
-              <Image
-                src={coverSrc}
-                alt=""
-                fill
-                sizes="(max-width: 640px) 100vw, 36rem"
-                className="object-cover"
-              />
+              {isVideoUrl(coverSrc) ? (
+                <video
+                  src={coverSrc}
+                  controls
+                  preload="metadata"
+                  playsInline
+                  controlsList="nodownload"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <Image
+                  src={coverSrc}
+                  alt=""
+                  fill
+                  sizes="(max-width: 640px) 100vw, 36rem"
+                  className="object-cover"
+                />
+              )}
             </div>
           ) : null}
 

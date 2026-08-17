@@ -106,15 +106,16 @@ export default function EditPostPage() {
           status: postQuery.data.status,
           publishedAt: postQuery.data.publishedAt ?? "",
           coAuthorIds: postQuery.data.coAuthors.map((author) => author.id),
+          funderIds: postQuery.data.funderIds ?? [],
           projectDetails: postQuery.data.projectDetails
             ? {
                 generalObjective:
-                  postQuery.data.projectDetails.generalObjective,
+                  postQuery.data.projectDetails.generalObjective ?? "",
                 startDate: postQuery.data.projectDetails.startDate ?? "",
                 endDate: postQuery.data.projectDetails.endDate ?? "",
-                budgetValue: postQuery.data.projectDetails.budgetValue,
+                budgetValue: postQuery.data.projectDetails.budgetValue ?? undefined,
                 executionStatus:
-                  postQuery.data.projectDetails.executionStatus,
+                  postQuery.data.projectDetails.executionStatus ?? undefined,
               }
             : undefined,
         }}

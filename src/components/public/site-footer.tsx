@@ -114,7 +114,7 @@ export function SiteFooter() {
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="size-4 shrink-0 text-brand-green" />
-                (84) 3421-0000
+                (84) 3615-2801
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="size-4 shrink-0 text-brand-green" />

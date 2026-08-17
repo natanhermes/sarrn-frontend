@@ -109,9 +109,7 @@ export const institutionalPageFormSchema = z.object({
     .max(220, "O slug deve ter no máximo 220 caracteres")
     .optional(),
   menuGroup: menuGroupSchema,
-  blocks: z
-    .array(contentBlockFormSchema)
-    .min(1, "Adicione ao menos um bloco"),
+  blocks: z.array(contentBlockFormSchema),
 });
 
 export type InstitutionalPage = z.infer<typeof institutionalPageSchema>;
@@ -233,7 +231,7 @@ export function toInstitutionalPageSubmitPayload(
     title: values.title.trim(),
     slug: optionalOrNull(values.slug),
     menuGroup: values.menuGroup,
-    blocks: toBlocksSubmitPayload(values.blocks),
+    blocks: toBlocksSubmitPayload(values.blocks ?? []),
   };
 }
 

@@ -89,9 +89,7 @@ export const actionLineFormSchema = z.object({
   displayOrder: z
     .number({ error: "Informe a ordem de exibição" })
     .int("A ordem deve ser um número inteiro"),
-  blocks: z
-    .array(actionLineBlockFormSchema)
-    .min(1, "Adicione ao menos um bloco"),
+  blocks: z.array(actionLineBlockFormSchema),
 });
 
 export type ActionLine = z.infer<typeof actionLineSchema>;
@@ -198,7 +196,7 @@ export function toActionLineSubmitPayload(values: ActionLineFormValues) {
     summary: optionalOrNull(values.summary),
     isActive: values.isActive,
     displayOrder: Number(values.displayOrder),
-    blocks: toBlocksSubmitPayload(values.blocks),
+    blocks: toBlocksSubmitPayload(values.blocks ?? []),
   };
 }
 

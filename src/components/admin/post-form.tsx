@@ -10,6 +10,7 @@ import { NumericFormat } from "react-number-format";
 import { CoAuthorsSelect } from "@/components/admin/co-authors-select";
 import { ContentBlocksField } from "@/components/admin/content-blocks-field";
 import { CoverImageUpload } from "@/components/admin/cover-image-upload";
+import { FundersSelect } from "@/components/admin/funders-select";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -96,6 +97,7 @@ export function PostForm({
         (initialStatus === "SCHEDULED" || Boolean(initialPublishedAt)),
       publishedAt: initialPublishedAt,
       coAuthorIds: defaultValues?.coAuthorIds ?? [],
+      funderIds: defaultValues?.funderIds ?? [],
       projectDetails: {
         generalObjective:
           defaultValues?.projectDetails?.generalObjective ?? "",
@@ -358,6 +360,27 @@ export function PostForm({
                 A duração será calculada automaticamente pelo backend.
               </p>
             </div>
+
+            <Controller
+              name="funderIds"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Financiadores</FieldLabel>
+                  <FieldDescription>
+                    Opcional. Selecione um ou mais apoiadores/financiadores do projeto.
+                  </FieldDescription>
+                  <FundersSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isSubmitting}
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
 
             <Controller
               name="projectDetails.generalObjective"

@@ -7,10 +7,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { canDeleteMedia } from "@/lib/post-permissions";
-import { GALLERY_IMAGE_ACCEPT, uploadImage } from "@/lib/upload";
+import {
+  GALLERY_MEDIA_ACCEPT,
+  isVideoUrl,
+  uploadImage,
+} from "@/lib/upload";
 import { useAuth } from "@/store/useAuth";
 
-const MAX_GALLERY_IMAGES = 15;
+const MAX_GALLERY_ITEMS = 15;
 
 type GalleryImagesUploadProps = {
   value?: string[];
@@ -29,8 +33,8 @@ export function GalleryImagesUpload({
   const [isUploading, setIsUploading] = useState(false);
   const user = useAuth((state) => state.user);
   const allowDelete = canDeleteMedia(user);
-  const images = value.filter(Boolean);
-  const remainingSlots = MAX_GALLERY_IMAGES - images.length;
+  const items = value.filter(Boolean);
+  const remainingSlots = MAX_GALLERY_ITEMS - items.length;
   const isAtLimit = remainingSlots <= 0;
 
   async function handleFiles(files?: FileList | null) {
@@ -48,7 +52,7 @@ export function GalleryImagesUpload({
 
     if (hasSvg) {
       toast.error(
-        "SVGs não são permitidos em blocos de galeria. Selecione apenas imagens (JPG, PNG, WEBP ou AVIF).",
+        "SVGs não são permitidos em blocos de galeria. Selecione imagens (JPG, PNG, WEBP, AVIF) ou vídeos (MP4, WEBM).",
       );
       if (inputRef.current) {
         inputRef.current.value = "";
@@ -58,7 +62,7 @@ export function GalleryImagesUpload({
 
     if (selected.length > remainingSlots) {
       toast.error(
-        "Você atingiu o limite de 15 fotos. Selecione apenas as melhores imagens do seu projeto.",
+        `Você atingiu o limite de ${MAX_GALLERY_ITEMS} arquivos. Selecione apenas as melhores mídias do seu projeto.`,
       );
       if (inputRef.current) {
         inputRef.current.value = "";
@@ -75,15 +79,15 @@ export function GalleryImagesUpload({
         uploaded.push(await uploadImage(file, storagePath));
       }
 
-      onChange([...images, ...uploaded]);
+      onChange([...items, ...uploaded]);
       toast.success(
         uploaded.length === 1
-          ? "Imagem adicionada à galeria"
-          : `${uploaded.length} imagens adicionadas à galeria`,
+          ? "Mídia adicionada à galeria"
+          : `${uploaded.length} mídias adicionadas à galeria`,
       );
     } catch (error) {
       toast.error(
-        getApiErrorMessage(error, "Não foi possível enviar a imagem."),
+        getApiErrorMessage(error, "Não foi possível enviar a mídia."),
       );
     } finally {
       setIsUploading(false);
@@ -94,7 +98,7 @@ export function GalleryImagesUpload({
   }
 
   function removeAt(index: number) {
-    onChange(images.filter((_, current) => current !== index));
+    onChange(items.filter((_, current) => current !== index));
   }
 
   return (
@@ -102,53 +106,66 @@ export function GalleryImagesUpload({
       <input
         ref={inputRef}
         type="file"
-        accept={GALLERY_IMAGE_ACCEPT}
+        accept={GALLERY_MEDIA_ACCEPT}
         multiple
         className="hidden"
         disabled={disabled || isUploading || isAtLimit}
         onChange={(event) => handleFiles(event.target.files)}
       />
 
-      {images.length === 0 ? (
+      {items.length === 0 ? (
         <div className="flex h-28 items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 text-sm text-muted-foreground">
-          Nenhuma imagem na galeria
+          Nenhuma mídia na galeria
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {images.map((url, index) => (
-            <div
-              key={`${url}-${index}`}
-              className="group relative overflow-hidden rounded-lg border border-border bg-muted/20"
-            >
-              <img
-                src={url}
-                alt={`Imagem ${index + 1} da galeria`}
-                className="aspect-square w-full object-cover"
-              />
-              {allowDelete ? (
-                <Button
-                  type="button"
-                  size="icon-sm"
-                  variant="secondary"
-                  className="absolute top-2 right-2"
-                  disabled={disabled || isUploading}
-                  onClick={() => removeAt(index)}
-                  aria-label="Remover imagem"
-                >
-                  <Trash2Icon />
-                </Button>
-              ) : null}
-            </div>
-          ))}
+          {items.map((url, index) => {
+            const isVideo = isVideoUrl(url);
+
+            return (
+              <div
+                key={`${url}-${index}`}
+                className="group relative overflow-hidden rounded-lg border border-border bg-muted/20"
+              >
+                {isVideo ? (
+                  <video
+                    src={url}
+                    controls
+                    preload="metadata"
+                    playsInline
+                    controlsList="nodownload"
+                    className="aspect-square w-full object-cover"
+                  />
+                ) : (
+                  <img
+                    src={url}
+                    alt={`Mídia ${index + 1} da galeria`}
+                    className="aspect-square w-full object-cover"
+                  />
+                )}
+                {allowDelete ? (
+                  <Button
+                    type="button"
+                    size="icon-sm"
+                    variant="secondary"
+                    className="absolute top-2 right-2"
+                    disabled={disabled || isUploading}
+                    onClick={() => removeAt(index)}
+                    aria-label="Remover mídia"
+                  >
+                    <Trash2Icon />
+                  </Button>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       )}
 
       <p className="text-sm text-muted-foreground">
-        Selecione as imagens. Máximo de {MAX_GALLERY_IMAGES} fotos por
-        publicação
-        {images.length > 0
-          ? ` (${images.length}/${MAX_GALLERY_IMAGES}).`
-          : "."}
+        Selecione imagens ou vídeos (.mp4, .webm até 100MB). Máximo de{" "}
+        {MAX_GALLERY_ITEMS} mídias por publicação
+        {items.length > 0 ? ` (${items.length}/${MAX_GALLERY_ITEMS}).` : "."}
       </p>
 
       <Button
@@ -162,7 +179,7 @@ export function GalleryImagesUpload({
         ) : (
           <ImagePlusIcon />
         )}
-        {isAtLimit ? "Limite de fotos atingido" : "Adicionar imagens"}
+        {isAtLimit ? "Limite de mídias atingido" : "Adicionar mídias"}
       </Button>
     </div>
   );

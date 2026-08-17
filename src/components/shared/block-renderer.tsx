@@ -32,7 +32,7 @@ export function BlockRenderer({
           return (
             <article
               key={block.id ?? `text-${block.displayOrder}`}
-              className="prose prose-brand my-2 w-full min-w-0 max-w-none overflow-hidden wrap-break-word dark:prose-invert [&_img]:mx-auto [&_img]:h-auto [&_img]:max-w-full [&_.ql-align-center]:text-center [&_.ql-align-justify]:text-justify [&_.ql-align-right]:text-right"
+              className="prose prose-brand my-2 w-full min-w-0 max-w-none overflow-hidden wrap-break-word dark:prose-invert [&_img]:mx-auto [&_img]:h-auto [&_img]:max-w-full [&_video]:mx-auto [&_video]:my-4 [&_video]:h-auto [&_video]:max-w-full [&_video]:rounded-xl [&_.ql-align-center]:text-center [&_.ql-align-justify]:text-justify [&_.ql-align-right]:text-right"
               dangerouslySetInnerHTML={{ __html: safeHtml }}
             />
           );

@@ -8,6 +8,8 @@ export const funderSchema = z
   .object({
     id: z.union([z.string(), z.number()]).transform(String),
     name: z.string(),
+    cnpj: optionalTextSchema.optional(),
+    cnpj_format: optionalTextSchema.optional(),
     logoUrl: z.string().nullish(),
     logo_url: z.string().nullish(),
     siteUrl: optionalTextSchema.optional(),
@@ -24,6 +26,7 @@ export const funderSchema = z
     id: funder.id,
     storageId: funder.storageId || funder.storage_id || undefined,
     name: funder.name,
+    cnpj: funder.cnpj || funder.cnpj_format || "",
     logoUrl: funder.logoUrl || funder.logo_url || "",
     siteUrl: funder.siteUrl || funder.site_url || "",
     isActive: funder.isActive ?? funder.is_active ?? true,
@@ -34,6 +37,7 @@ export const funderFormSchema = z.object({
   storageId: z.string().optional(),
   logoUrl: z.string().min(1, "Envie a logo do apoiador"),
   name: z.string().min(1, "Informe o nome"),
+  cnpj: z.string().optional(),
   siteUrl: z.string().optional(),
   isActive: z.boolean(),
   displayOrder: z
@@ -109,6 +113,7 @@ export function toFunderSubmitPayload(values: FunderFormValues) {
     storageId: values.storageId || undefined,
     logoUrl: values.logoUrl.trim(),
     name: values.name.trim(),
+    cnpj: optionalOrNull(values.cnpj),
     siteUrl: optionalOrNull(values.siteUrl),
     isActive: values.isActive,
     displayOrder: Number(values.displayOrder),

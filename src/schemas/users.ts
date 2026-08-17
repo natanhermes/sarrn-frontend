@@ -51,6 +51,33 @@ export type AdminUser = z.infer<typeof adminUserSchema>;
 export type AuthorSummary = z.infer<typeof authorSummarySchema>;
 export type CreateUserFormValues = z.infer<typeof createUserSchema>;
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Informe a senha atual"),
+    newPassword: z
+      .string()
+      .min(8, "Mínimo de 8 caracteres")
+      .regex(/[A-Z]/, "Deve conter ao menos uma letra maiúscula")
+      .regex(/[0-9]/, "Deve conter ao menos um número")
+      .regex(/[^A-Za-z0-9]/, "Deve conter ao menos um caractere especial"),
+    confirmNewPassword: z.string().min(1, "Confirme a nova senha"),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: "As senhas não coincidem",
+    path: ["confirmNewPassword"],
+  });
+
+export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
+
+export function toChangePasswordSubmitPayload(
+  values: ChangePasswordFormValues,
+) {
+  return {
+    currentPassword: values.currentPassword,
+    newPassword: values.newPassword,
+  };
+}
+
 export function parseUsersList(payload: unknown): AdminUser[] {
   const parsed = usersListResponseSchema.parse(payload);
 
