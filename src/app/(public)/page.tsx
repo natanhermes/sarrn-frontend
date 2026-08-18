@@ -20,9 +20,9 @@ import {
 } from "@/lib/public-api";
 
 export const metadata: Metadata = {
-  title: "SARRN — Semeando Autonomia e Renda no Rio Grande do Norte",
+  title: "SAR — Semeando Autonomia e Renda no Rio Grande do Norte",
   description:
-    "A SARRN é uma organização social que promove agricultura sustentável, educação e desenvolvimento comunitário. Conheça nossos projetos, notícias e relatórios de transparência.",
+    "O SAR é uma organização social que promove agricultura sustentável, educação e desenvolvimento comunitário. Conheça nossos projetos, notícias e relatórios de transparência.",
 };
 
 export default async function HomePage() {
@@ -37,7 +37,7 @@ export default async function HomePage() {
     aboutUs,
   ] = await Promise.all([
     getPublicPosts("PROJECT", 3),
-    getPublicPosts("NEWS", 4),
+    getPublicPosts(["NEWS", "ARTICLE"], 4),
     getPublicCarouselSlides(),
     getPublicFundersGrouped(),
     getPublicActionLines(),

@@ -5,16 +5,11 @@ import { BlockRenderer } from "@/components/shared/block-renderer";
 import { getPublicAboutUs } from "@/lib/public-api";
 import { hasValidBlocks } from "@/lib/utils";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const about = await getPublicAboutUs();
-
-  return {
-    title: about?.title ? `${about.title} | SARRN` : "Quem Somos | SARRN",
-    description:
-      about?.summary ||
-      "Conheça a história, missão e atuação da SARRN no semiárido potiguar.",
-  };
-}
+export const metadata: Metadata = {
+  title: "Quem Somos — SAR",
+  description:
+    "Conheça a história, missão e atuação do SAR no semiárido potiguar.",
+};
 
 export default async function QuemSomosPublicPage() {
   const about = await getPublicAboutUs();

@@ -127,7 +127,7 @@ export function DonateSection({ settings }: DonateSectionProps) {
                   />
                 }
               >
-                Quero apoiar a SARRN
+                Quero apoiar o SAR
               </DialogTrigger>
 
               <DialogContent className="max-h-[85vh] gap-8 overflow-y-auto p-6 sm:max-w-2xl sm:p-8">

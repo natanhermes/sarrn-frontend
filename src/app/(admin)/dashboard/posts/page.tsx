@@ -102,6 +102,7 @@ function PostsPageContent() {
         params: {
           page,
           size,
+          sort: "createdAt,desc",
           ...(selectedType ? { type: selectedType } : {}),
         },
       });
@@ -175,7 +176,12 @@ function PostsPageContent() {
     : "Todas as Publicações";
 
   const postsPage = postsQuery.data;
-  const posts = postsPage?.content ?? [];
+  const rawPosts = postsPage?.content ?? [];
+  const posts = [...rawPosts].sort((a, b) => {
+    const dateA = new Date(a.publishedAt || a.createdAt || 0).getTime();
+    const dateB = new Date(b.publishedAt || b.createdAt || 0).getTime();
+    return dateB - dateA;
+  });
   const isFirst = postsPage?.first ?? true;
   const isLast = postsPage?.last ?? true;
   const totalPages = postsPage?.totalPages ?? 1;

@@ -37,8 +37,8 @@ function FunderLogoGrid({
     <div
       className={
         compact
-          ? "mt-8 grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-4 lg:grid-cols-6"
-          : "mt-10 grid grid-cols-2 gap-x-8 gap-y-8 md:grid-cols-4 lg:grid-cols-6"
+          ? "mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 items-stretch"
+          : "mt-10 grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 items-stretch"
       }
     >
       {funders.map((funder) => {
@@ -48,26 +48,31 @@ function FunderLogoGrid({
 
         const content = (
           <>
-            <img
-              src={logoSrc}
-              alt={funder.name}
-              className={
-                compact
-                  ? "h-10 w-full object-contain opacity-80 md:h-12"
-                  : "h-12 w-full object-contain md:h-14"
-              }
-            />
+            <div className="flex flex-1 items-center justify-center w-full">
+              <img
+                src={logoSrc}
+                alt={funder.name}
+                className={
+                  compact
+                    ? "h-14 w-full max-w-[140px] object-cover opacity-90 transition-transform duration-300 group-hover:scale-105 md:h-16 lg:h-20"
+                    : "h-20 w-full max-w-[180px] object-cover transition-transform duration-300 group-hover:scale-105 md:h-24 lg:h-28"
+                }
+              />
+            </div>
             <span
               className={
                 compact
-                  ? "mt-2 text-xs font-medium text-muted-foreground"
-                  : "mt-2 text-xs font-medium text-muted-foreground md:text-sm"
+                  ? "mt-3 text-xs font-semibold text-muted-foreground transition-colors group-hover:text-foreground text-center md:text-sm"
+                  : "mt-4 text-sm font-semibold text-foreground/90 transition-colors group-hover:text-brand-green text-center md:text-base"
               }
             >
               {funder.name}
             </span>
           </>
         );
+
+        const cardClasses =
+          "group flex flex-col items-center justify-between rounded-2xl border border-border/80 bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-brand-green/40 hover:shadow-md hover:shadow-brand-black/5";
 
         if (siteUrl) {
           return (
@@ -77,7 +82,7 @@ function FunderLogoGrid({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Visitar site de ${funder.name}`}
-              className="flex flex-col items-center justify-center px-2 text-center transition-transform hover:scale-105"
+              className={cardClasses}
             >
               {content}
             </a>
@@ -85,10 +90,7 @@ function FunderLogoGrid({
         }
 
         return (
-          <div
-            key={funder.id}
-            className="flex flex-col items-center justify-center px-2 text-center"
-          >
+          <div key={funder.id} className={cardClasses}>
             {content}
           </div>
         );
@@ -98,36 +100,46 @@ function FunderLogoGrid({
 }
 
 export function ApoiadoresSection({ fundersGrouped }: ApoiadoresSectionProps) {
-  const { supporters, partners } = fundersGrouped;
+  const activeSupporters = (fundersGrouped.supporters ?? []).filter(
+    (funder) => funder.isActive !== false,
+  );
+  const activePartners = (fundersGrouped.partners ?? []).filter(
+    (funder) => funder.isActive !== false,
+  );
 
-  if (supporters.length === 0 && partners.length === 0) {
+  if (activeSupporters.length === 0 && activePartners.length === 0) {
     return null;
   }
 
   return (
-    <section className="border-y border-border bg-secondary/40 py-16 md:py-20">
+    <section className="border-y border-border bg-gradient-to-b from-secondary/60 to-secondary/30 py-16">
       <div className="mx-auto flex max-w-6xl flex-col gap-16 px-5 md:px-8">
-        {supporters.length > 0 ? (
+        {activeSupporters.length > 0 ? (
           <div>
-            <p className="text-center text-sm font-semibold tracking-widest text-muted-foreground uppercase">
-              Quem apoia essa transformação
-            </p>
-            <FunderLogoGrid funders={supporters} />
+            <div className="mx-auto max-w-2xl text-center">
+              <span className="text-sm font-bold tracking-widest text-brand-green uppercase">
+                Quem Apoia Nossa Causa
+              </span>
+              <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-foreground md:text-3xl">
+                Apoiadores e Financiadores
+              </h2>
+            </div>
+            <FunderLogoGrid funders={activeSupporters} />
           </div>
         ) : null}
 
-        {partners.length > 0 ? (
+        {activePartners.length > 0 ? (
           <div>
             <div className="mx-auto max-w-2xl text-center">
-              <p className="text-sm font-semibold tracking-widest text-muted-foreground uppercase">
-                Parcerias
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <span className="text-sm font-bold tracking-widest text-muted-foreground uppercase">
+                Parcerias Institucionais
+              </span>
+              <p className="mt-2 text-sm text-muted-foreground md:text-base">
                 Organizações e instituições que caminharam conosco ao longo da
                 nossa história.
               </p>
             </div>
-            <FunderLogoGrid funders={partners} compact />
+            <FunderLogoGrid funders={activePartners} compact />
           </div>
         ) : null}
       </div>

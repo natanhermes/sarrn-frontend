@@ -23,10 +23,10 @@ export function NoticiasSection({ news }: NoticiasSectionProps) {
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-xl">
             <span className="text-lg font-semibold tracking-widest text-brand-green uppercase">
-              Últimas notícias
+              Últimas notícias e artigos
             </span>
             <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-balance leading-tight md:text-4xl">
-              O que está acontecendo na SARRN
+              O que está acontecendo no SAR
             </h2>
           </div>
           <Button
@@ -36,14 +36,14 @@ export function NoticiasSection({ news }: NoticiasSectionProps) {
             nativeButton={false}
             render={<Link href="/noticias" />}
           >
-            Ver todas as notícias
+            Ver todas as notícias e artigos
             <ArrowRight className="size-4" />
           </Button>
         </div>
 
         {news.length === 0 ? (
           <p className="mt-14 text-sm text-muted-foreground">
-            Nenhuma notícia publicada no momento.
+            Nenhuma notícia ou artigo publicado no momento.
           </p>
         ) : (
           <div className="mt-14 grid gap-6 lg:grid-cols-2">
@@ -67,7 +67,7 @@ export function NoticiasSection({ news }: NoticiasSectionProps) {
                 <div className="flex flex-1 flex-col p-7">
                   <div className="flex items-center justify-between gap-3 text-xs font-medium">
                     <span className="rounded-full bg-brand-pink/10 px-2.5 py-1 font-semibold text-brand-green">
-                      Notícia
+                      {destaque.type === "ARTICLE" ? "Artigo" : "Notícia"}
                     </span>
                     <span className="flex items-center gap-1.5 text-muted-foreground">
                       <CalendarDays className="size-3.5" />
@@ -110,7 +110,7 @@ export function NoticiasSection({ news }: NoticiasSectionProps) {
                   <div className="flex flex-col justify-center py-1">
                     <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                       <span className="font-semibold text-brand-green">
-                        Notícia
+                        {noticia.type === "ARTICLE" ? "Artigo" : "Notícia"}
                       </span>
                       <span aria-hidden>•</span>
                       <span>

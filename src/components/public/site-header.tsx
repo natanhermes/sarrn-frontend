@@ -118,7 +118,7 @@ export function SiteHeader({
         )}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 md:px-8">
-          <Link href="/" aria-label="Página inicial da SARRN">
+          <Link href="/" aria-label="Página inicial do SAR">
             <SarrnLogo />
           </Link>
 

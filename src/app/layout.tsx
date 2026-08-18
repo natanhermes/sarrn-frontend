@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SARRN — Semeando Autonomia e Renda no Rio Grande do Norte",
+  title: "SAR — Serviço de Assistência Rural e Urbano",
   description:
-    "Portal institucional da SARRN: projetos sociais, notícias e transparência.",
+    "Portal institucional do SAR: projetos sociais, notícias e transparência.",
   icons: {
     icon: [
       {

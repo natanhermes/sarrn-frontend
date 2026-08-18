@@ -10,9 +10,9 @@ import { getPublicPostsPage } from "@/lib/public-api";
 import type { PostType } from "@/schemas/posts";
 
 export const metadata: Metadata = {
-  title: "Publicações e Materiais — SARRN",
+  title: "Publicações — SAR",
   description:
-    "Acesse cartilhas, documentos e relatórios publicados pela SARRN.",
+    "Acesse cartilhas, documentos e relatórios publicados pelo SAR.",
 };
 
 const PAGE_SIZE = 9;

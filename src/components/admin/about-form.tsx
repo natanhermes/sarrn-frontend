@@ -139,7 +139,7 @@ export function AboutForm({
                     {...field}
                     id="about-summary"
                     rows={4}
-                    placeholder="Resumo das atividades e propósito da SARRN..."
+                    placeholder="Resumo das atividades e propósito do SAR..."
                     disabled={isSubmitting}
                   />
                   <FieldDescription>

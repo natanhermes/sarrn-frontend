@@ -22,10 +22,10 @@ export async function generateMetadata({
 
   return {
     title: `${line.title} | SARRN`,
-    description: `Linha de atuação da SARRN: ${line.title}.`,
+    description: `Linha de atuação do SAR: ${line.title}.`,
     openGraph: {
-      title: line.title,
-      description: `Linha de atuação da SARRN: ${line.title}.`,
+      title: `${line.title} | SAR`,
+      description: `Linha de atuação do SAR: ${line.title}.`,
       ...(coverImage
         ? {
             images: [

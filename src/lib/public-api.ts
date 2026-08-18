@@ -120,6 +120,8 @@ function buildPublicPostsUrl(params: GetPublicPostsParams = {}) {
     url.searchParams.set("year", String(params.year));
   }
 
+  url.searchParams.set("sort", "publishedAt,desc");
+
   return url.toString();
 }
 
@@ -170,7 +172,13 @@ export async function getPublicPostsPage(
     }
 
     const payload: unknown = await response.json();
-    return parsePostsPage(payload);
+    const page = parsePostsPage(payload);
+    page.content.sort((a, b) => {
+      const dateA = new Date(a.publishedAt || a.createdAt || 0).getTime();
+      const dateB = new Date(b.publishedAt || b.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
+    return page;
   } catch {
     return {
       content: [],
@@ -185,7 +193,7 @@ export async function getPublicPostsPage(
 }
 
 export async function getPublicPosts(
-  type: PostType,
+  type: PostType | PostType[],
   size: number,
 ): Promise<PublicPost[]> {
   const page = await getPublicPostsPage({ type, size, page: 0 });
@@ -636,6 +644,8 @@ function buildPublicEventsUrl(params: GetPublicEventsParams = {}) {
     url.searchParams.set("size", String(params.size));
   }
 
+  url.searchParams.set("sort", "startDate,desc");
+
   return url.toString();
 }
 
@@ -686,7 +696,13 @@ export async function getPublicEventsPage(
     }
 
     const payload: unknown = await response.json();
-    return parseEventSummariesPage(payload);
+    const page = parseEventSummariesPage(payload);
+    page.content.sort((a, b) => {
+      const dateA = new Date(a.startDate || 0).getTime();
+      const dateB = new Date(b.startDate || 0).getTime();
+      return dateB - dateA;
+    });
+    return page;
   } catch {
     return {
       content: [],

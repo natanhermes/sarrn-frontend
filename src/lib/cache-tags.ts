@@ -1,6 +1,7 @@
 import type { PostType } from "@/schemas/posts";
 
 export const CACHE_TAGS = {
+  posts: "posts",
   projetos: "projetos",
   noticias: "noticias",
   artigos: "artigos",
@@ -30,9 +31,10 @@ const ALL_POST_TAGS = Object.values(POST_TYPE_TAGS);
 
 export function tagsForPostTypes(type?: PostType | PostType[]) {
   if (!type) {
-    return ALL_POST_TAGS;
+    return [CACHE_TAGS.posts, ...ALL_POST_TAGS];
   }
 
   const types = Array.isArray(type) ? type : [type];
-  return [...new Set(types.map((value) => POST_TYPE_TAGS[value]))];
+  const specificTags = types.map((value) => POST_TYPE_TAGS[value]);
+  return [...new Set([CACHE_TAGS.posts, ...specificTags])];
 }

@@ -27,12 +27,12 @@ export async function generateMetadata({
     title: `${post.title} | SARRN`,
     description:
       post.summary?.trim() ||
-      "Publicação institucional da SARRN.",
+      "Publicação institucional do SAR.",
     openGraph: {
       title: post.title,
       description:
         post.summary?.trim() ||
-        "Publicação institucional da SARRN.",
+        "Publicação institucional do SAR.",
       ...(coverImage
         ? {
           images: [

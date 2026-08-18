@@ -23,7 +23,7 @@ export function QuemSomos({ aboutUs, statistics = [] }: QuemSomosProps) {
     "Uma rede que semeia autonomia e renda no Rio Grande do Norte";
   const summary =
     aboutUs?.summary?.trim() ||
-    "A SARRN é uma organização da sociedade civil que atua junto a comunidades rurais do semiárido potiguar. Nossa missão é promover o desenvolvimento sustentável por meio da agroecologia, da educação do campo e do fortalecimento comunitário — respeitando os saberes locais e ampliando direitos.";
+    "O SAR é uma organização da sociedade civil que atua junto a comunidades rurais do semiárido potiguar. Nossa missão é promover o desenvolvimento sustentável por meio da agroecologia, da educação do campo e do fortalecimento comunitário — respeitando os saberes locais e ampliando direitos.";
   const badgeText = aboutUs?.badgeText?.trim() || "transformando o semiárido";
   const hasDetailedContent = hasValidBlocks(aboutUs?.detailedBlocks);
 
@@ -38,7 +38,7 @@ export function QuemSomos({ aboutUs, statistics = [] }: QuemSomosProps) {
             <div className="relative aspect-4/5 w-full overflow-hidden rounded-3xl">
               <Image
                 src={imageUrl}
-                alt="Equipe e voluntários da SARRN reunidos em atividade"
+                alt="Equipe e voluntários do SAR reunidos em atividade"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover"

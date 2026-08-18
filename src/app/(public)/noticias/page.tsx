@@ -10,9 +10,9 @@ import { getPublicPostsPage } from "@/lib/public-api";
 import type { PostType } from "@/schemas/posts";
 
 export const metadata: Metadata = {
-  title: "Notícias e Artigos — SARRN",
+  title: "Notícias e Artigos — SAR",
   description:
-    "Acompanhe as últimas notícias e artigos da SARRN sobre agroecologia, educação e desenvolvimento comunitário no semiárido potiguar.",
+    "Acompanhe as últimas notícias e artigos do SAR sobre agroecologia, educação e desenvolvimento comunitário no semiárido potiguar.",
 };
 
 const PAGE_SIZE = 9;
@@ -43,7 +43,7 @@ export default async function NoticiasPage({
     <PostsCatalog
       eyebrow="Notícias"
       title="Últimas Notícias"
-      description="Acompanhe matérias e artigos sobre os projetos, ações e impactos da SARRN nas comunidades do Rio Grande do Norte."
+      description="Acompanhe matérias e artigos sobre os projetos, ações e impactos do SAR nas comunidades do Rio Grande do Norte."
       emptyMessage="Nenhuma notícia ou artigo encontrado com os filtros selecionados."
       basePath="/noticias"
       pageData={pageData}

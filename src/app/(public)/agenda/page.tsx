@@ -6,9 +6,9 @@ import { resolveCatalogPage } from "@/lib/catalog-filters";
 import { getPublicEventsPage } from "@/lib/public-api";
 
 export const metadata: Metadata = {
-  title: "Agenda — SARRN",
+  title: "Agenda — SAR",
   description:
-    "Acompanhe os próximos eventos, encontros e atividades da SARRN no semiárido potiguar.",
+    "Acompanhe os próximos eventos, encontros e atividades do SAR no semiárido potiguar.",
 };
 
 const PAGE_SIZE = 10;
@@ -94,7 +94,7 @@ export default async function AgendaPage({ searchParams }: AgendaPageProps) {
             Eventos e encontros
           </h1>
           <p className="mt-4 max-w-2xl text-base text-white/80">
-            Confira as atividades da SARRN e explore os detalhes de cada
+            Confira as atividades do SAR e explore os detalhes de cada
             evento.
           </p>
         </div>

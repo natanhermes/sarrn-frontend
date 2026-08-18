@@ -8,9 +8,9 @@ import {
 import { getPublicPostsPage } from "@/lib/public-api";
 
 export const metadata: Metadata = {
-  title: "Nossos Projetos — SARRN",
+  title: "Projetos — SAR",
   description:
-    "Conheça os projetos da SARRN em agroecologia, educação e desenvolvimento comunitário no semiárido potiguar.",
+    "Conheça os projetos do SAR em agroecologia, educação e desenvolvimento comunitário no semiárido potiguar.",
 };
 
 const PAGE_SIZE = 9;
