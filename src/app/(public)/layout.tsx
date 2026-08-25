@@ -1,7 +1,13 @@
 import { FloatingDonateButton } from "@/components/public/floating-donate-button";
+import { FloatingSocialSidebar } from "@/components/public/floating-social-sidebar";
 import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader, type HeaderMenuItem } from "@/components/public/site-header";
-import { getPublicAboutUs, getPublicPagesMenu } from "@/lib/public-api";
+import {
+  getPublicAboutUs,
+  getPublicPagesMenu,
+  getPublicSiteSettings,
+  type PublicSiteSettings,
+} from "@/lib/public-api";
 import { hasValidBlocks } from "@/lib/utils";
 import { getInstitutionalPagePath } from "@/schemas/institutional-pages";
 
@@ -12,12 +18,16 @@ export default async function PublicLayout({
 }>) {
   let sarMenuItems: HeaderMenuItem[] = [];
   let transparenciaMenuItems: HeaderMenuItem[] = [];
+  let settings: PublicSiteSettings | null = null;
 
   try {
-    const [aboutUs, pagesMenu] = await Promise.all([
+    const [aboutUs, pagesMenu, fetchedSettings] = await Promise.all([
       getPublicAboutUs(),
       getPublicPagesMenu(),
+      getPublicSiteSettings(),
     ]);
+
+    settings = fetchedSettings;
 
     // 1. Inserir "Quem somos" se houver blocos válidos em detailedBlocks
     if (hasValidBlocks(aboutUs?.detailedBlocks)) {
@@ -48,6 +58,7 @@ export default async function PublicLayout({
     // Tratar falha graciosamente em caso de erro na API
     sarMenuItems = [];
     transparenciaMenuItems = [];
+    settings = null;
   }
 
   return (
@@ -57,6 +68,7 @@ export default async function PublicLayout({
         transparenciaMenuItems={transparenciaMenuItems}
       />
       <div className="min-w-0 flex-1">{children}</div>
+      <FloatingSocialSidebar settings={settings} />
       <FloatingDonateButton />
       <SiteFooter />
     </div>
