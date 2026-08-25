@@ -15,8 +15,9 @@ const projetosLinks = [
   { label: "Notícias", href: "/noticias" },
   { label: "Publicações", href: "/publicacoes" },
   { label: "Cartilhas", href: "/publicacoes?type=BOOKLET" },
-  { label: "Documentos", href: "/publicacoes?type=DOCUMENT" },
-  { label: "Relatórios", href: "/publicacoes?type=REPORT" },
+  { label: "E-books", href: "/publicacoes?type=EBOOK" },
+  { label: "Artigos", href: "/publicacoes?type=ARTICLE" },
+  { label: "Biblioteca", href: "/publicacoes?type=LIBRARY" },
 ];
 
 const redes = [

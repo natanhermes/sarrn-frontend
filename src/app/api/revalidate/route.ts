@@ -10,10 +10,6 @@ export async function POST(request: Request) {
   const expectedSecret = process.env.REVALIDATE_SECRET;
   const isAuthorized = Boolean(secret && secret === expectedSecret);
 
-  console.log(
-    `[revalidate webhook] Auth status: ${isAuthorized ? "AUTHORIZED" : "UNAUTHORIZED"} | Header present: ${Boolean(secret)} | REVALIDATE_SECRET configured: ${Boolean(expectedSecret)}`
-  );
-
   if (!isAuthorized) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -21,8 +17,6 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as RevalidateBody;
     const tag = typeof body.tag === "string" ? body.tag.trim() : "";
-
-    console.log(`[revalidate webhook] Received tag: "${tag}"`);
 
     if (!tag) {
       console.warn("[revalidate webhook] Missing or invalid tag in body:", body);
@@ -33,7 +27,6 @@ export async function POST(request: Request) {
     }
 
     revalidateTag(tag, "max");
-    console.log(`[revalidate webhook] Successfully revalidated tag: "${tag}"`);
 
     return NextResponse.json({ revalidated: true, tag });
   } catch (error) {

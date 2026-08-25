@@ -7,7 +7,9 @@ export const CACHE_TAGS = {
   artigos: "artigos",
   relatorios: "relatorios",
   cartilhas: "cartilhas",
+  ebooks: "ebooks",
   documentos: "documentos",
+  biblioteca: "biblioteca",
   agenda: "agenda",
   carousel: "carousel",
   actionLines: "action-lines",
@@ -16,6 +18,7 @@ export const CACHE_TAGS = {
   pages: "pages",
   settings: "settings",
   about: "about",
+  socialFeed: "social-feed",
 } as const;
 
 const POST_TYPE_TAGS: Record<PostType, string> = {
@@ -24,7 +27,9 @@ const POST_TYPE_TAGS: Record<PostType, string> = {
   ARTICLE: CACHE_TAGS.artigos,
   REPORT: CACHE_TAGS.relatorios,
   BOOKLET: CACHE_TAGS.cartilhas,
+  EBOOK: CACHE_TAGS.ebooks,
   DOCUMENT: CACHE_TAGS.documentos,
+  LIBRARY: CACHE_TAGS.biblioteca,
 };
 
 const ALL_POST_TAGS = Object.values(POST_TYPE_TAGS);

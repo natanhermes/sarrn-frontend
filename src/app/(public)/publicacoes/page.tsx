@@ -12,11 +12,11 @@ import type { PostType } from "@/schemas/posts";
 export const metadata: Metadata = {
   title: "Publicações — SAR",
   description:
-    "Acesse cartilhas, documentos e relatórios publicados pelo SAR.",
+    "Acesse e-books, cartilhas e artigos publicados pelo SAR.",
 };
 
 const PAGE_SIZE = 9;
-const ALLOWED_TYPES: PostType[] = ["BOOKLET", "DOCUMENT", "REPORT"];
+const ALLOWED_TYPES: PostType[] = ["BOOKLET", "EBOOK", "ARTICLE", "LIBRARY"];
 
 type PublicacoesPageProps = {
   searchParams: Promise<{ page?: string; type?: string; year?: string }>;
@@ -43,7 +43,7 @@ export default async function PublicacoesPage({
     <PostsCatalog
       eyebrow="Acervo"
       title="Publicações e Materiais"
-      description="Cartilhas, documentos e relatórios para apoiar a educação, a transparência e o desenvolvimento comunitário."
+      description="E-books, cartilhas e artigos para apoiar a educação, a transparência e o desenvolvimento comunitário."
       emptyMessage="Nenhuma publicação encontrada com os filtros selecionados."
       basePath="/publicacoes"
       pageData={pageData}
@@ -51,8 +51,9 @@ export default async function PublicacoesPage({
       activeYear={year}
       filterTypes={[
         { value: "BOOKLET", label: "Cartilhas" },
-        { value: "DOCUMENT", label: "Documentos" },
-        { value: "REPORT", label: "Relatórios" },
+        { value: "EBOOK", label: "E-books" },
+        { value: "ARTICLE", label: "Artigos" },
+        { value: "LIBRARY", label: "Biblioteca" },
       ]}
     />
   );

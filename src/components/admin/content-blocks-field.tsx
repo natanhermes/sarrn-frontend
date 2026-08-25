@@ -77,6 +77,12 @@ export function ContentBlocksField<T extends FormWithBlocks>({
         <p className="text-sm text-destructive">{errorsMessage}</p>
       ) : null}
 
+      {fields.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          Nenhum bloco de conteúdo adicionado. Escolha uma opção abaixo para começar.
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-4">
         {fields.map((item, index) => (
           <Controller
@@ -107,7 +113,7 @@ export function ContentBlocksField<T extends FormWithBlocks>({
                       size="icon-sm"
                       variant="ghost"
                       aria-label="Remover bloco"
-                      disabled={disabled || fields.length === 1}
+                      disabled={disabled}
                       onClick={() => remove(index)}
                     >
                       <Trash2Icon />

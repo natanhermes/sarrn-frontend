@@ -34,11 +34,11 @@ import {
   canSetPostStatus,
   resolvePostStatusForSubmit,
 } from "@/lib/post-permissions";
-import { emptyContentBlock } from "@/schemas/content-blocks";
 import {
   executionStatusSelectItems,
   postFormSchema,
   postStatusSelectItems,
+  postTypeLabels,
   postTypeSelectItems,
   toPostSubmitPayload,
   type PostFormValues,
@@ -88,9 +88,7 @@ export function PostForm({
       title: defaultValues?.title ?? "",
       summary: defaultValues?.summary ?? "",
       coverImageUrl: defaultValues?.coverImageUrl ?? "",
-      blocks: defaultValues?.blocks?.length
-        ? defaultValues.blocks
-        : [emptyContentBlock("TEXT")],
+      blocks: defaultValues?.blocks ?? [],
       status: initialStatus,
       manualPublishedAt:
         initialType !== "PROJECT" &&
@@ -183,43 +181,59 @@ export function PostForm({
           <Controller
             name="type"
             control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>Tipo</FieldLabel>
-                <Select
-                  items={postTypeSelectItems}
-                  value={field.value}
-                  onValueChange={(value) => {
-                    if (value != null) {
-                      field.onChange(value);
-                    }
-                  }}
-                  disabled={isSubmitting || isEditing}
-                >
-                  <SelectTrigger
-                    className="w-full"
-                    aria-invalid={fieldState.invalid}
+            render={({ field, fieldState }) => {
+              const activeItems = postTypeSelectItems.some(
+                (item) => item.value === field.value,
+              )
+                ? postTypeSelectItems
+                : field.value && field.value in postTypeLabels
+                  ? [
+                      ...postTypeSelectItems,
+                      {
+                        value: field.value as PostType,
+                        label: postTypeLabels[field.value as PostType],
+                      },
+                    ]
+                  : postTypeSelectItems;
+
+              return (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Tipo</FieldLabel>
+                  <Select
+                    items={activeItems}
+                    value={field.value}
+                    onValueChange={(value) => {
+                      if (value != null) {
+                        field.onChange(value);
+                      }
+                    }}
+                    disabled={isSubmitting || isEditing}
                   >
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {postTypeSelectItems.map((item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {isEditing ? (
-                  <FieldDescription>
-                    O tipo não pode ser alterado após a criação.
-                  </FieldDescription>
-                ) : null}
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
+                    <SelectTrigger
+                      className="w-full"
+                      aria-invalid={fieldState.invalid}
+                    >
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activeItems.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {isEditing ? (
+                    <FieldDescription>
+                      O tipo não pode ser alterado após a criação.
+                    </FieldDescription>
+                  ) : null}
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              );
+            }}
           />
 
           <Controller

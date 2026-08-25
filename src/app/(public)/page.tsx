@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 
 import { ActionLinesSection } from "@/components/public/action-lines-section";
 import { ApoiadoresSection } from "@/components/public/apoiadores-section";
-import { DonateSection } from "@/components/public/donate-section";
 import { HeroCarousel } from "@/components/public/hero-carousel";
 import { NoticiasSection } from "@/components/public/noticias-section";
 import { ProjetosSection } from "@/components/public/projetos-section";
 import { QuemSomos } from "@/components/public/quem-somos";
+import { SocialFeedSection } from "@/components/public/social-feed-section";
 import { WhereWeAreSection } from "@/components/public/where-we-are-section";
 import {
   getPublicAboutUs,
@@ -15,6 +15,7 @@ import {
   getPublicFundersGrouped,
   getPublicPosts,
   getPublicSiteSettings,
+  getPublicSocialFeed,
   getPublicStatistics,
   resolvePublicMediaUrl,
 } from "@/lib/public-api";
@@ -35,6 +36,7 @@ export default async function HomePage() {
     settings,
     statistics,
     aboutUs,
+    socialFeed,
   ] = await Promise.all([
     getPublicPosts("PROJECT", 3),
     getPublicPosts(["NEWS", "ARTICLE"], 4),
@@ -44,6 +46,7 @@ export default async function HomePage() {
     getPublicSiteSettings(),
     getPublicStatistics(),
     getPublicAboutUs(),
+    getPublicSocialFeed(),
   ]);
 
   const heroSlides = carouselSlides.map((slide) => ({
@@ -67,7 +70,7 @@ export default async function HomePage() {
       <ActionLinesSection actionLines={actionLines} />
       <ApoiadoresSection fundersGrouped={fundersGrouped} />
       <WhereWeAreSection settings={settings} />
-      <DonateSection settings={settings} />
+      <SocialFeedSection feed={socialFeed} />
     </main>
   );
 }

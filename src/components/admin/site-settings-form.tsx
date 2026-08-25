@@ -7,6 +7,13 @@ import { PatternFormat } from "react-number-format";
 
 import { Button } from "@/components/ui/button";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   Field,
   FieldDescription,
   FieldError,
@@ -70,6 +77,15 @@ export function SiteSettingsForm({
       bankAgency: defaultValues?.bankAgency ?? "",
       bankAccount: defaultValues?.bankAccount ?? "",
       documentCnpj: defaultValues?.documentCnpj ?? "",
+      donationPixPayload: defaultValues?.donationPixPayload ?? "",
+      youtubeApiKey: defaultValues?.youtubeApiKey ?? "",
+      youtubeChannelId: defaultValues?.youtubeChannelId ?? "",
+      instagramAccessToken: defaultValues?.instagramAccessToken ?? "",
+      instagramAccountId: defaultValues?.instagramAccountId ?? "",
+      facebookAccessToken: defaultValues?.facebookAccessToken ?? "",
+      facebookPageId: defaultValues?.facebookPageId ?? "",
+      metaAppId: defaultValues?.metaAppId ?? "",
+      metaAppSecret: defaultValues?.metaAppSecret ?? "",
     },
   });
 
@@ -88,6 +104,7 @@ export function SiteSettingsForm({
           <TabsTrigger value="localizacao">Localização e Contato</TabsTrigger>
           <TabsTrigger value="redes">Redes Sociais</TabsTrigger>
           <TabsTrigger value="doacoes">Doações</TabsTrigger>
+          <TabsTrigger value="integracoes">Integrações (APIs)</TabsTrigger>
         </TabsList>
 
         <TabsContent value="geral" className="mt-6">
@@ -425,6 +442,31 @@ export function SiteSettingsForm({
                   )}
                 />
               </div>
+
+              <Controller
+                control={form.control}
+                name="donationPixPayload"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="settings-donation-pix-payload">
+                      Código Pix para Doações (Pix Copia e Cola)
+                    </FieldLabel>
+                    <Textarea
+                      id="settings-donation-pix-payload"
+                      placeholder="00020126580014br.gov.bcb.pix..."
+                      rows={4}
+                      disabled={isSubmitting}
+                      {...field}
+                    />
+                    <FieldDescription>
+                      Gere um código Pix Copia e Cola estático no aplicativo do seu banco e cole aqui.
+                    </FieldDescription>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
             </FieldGroup>
           </div>
 
@@ -523,6 +565,231 @@ export function SiteSettingsForm({
               />
             </FieldGroup>
           </div>
+        </TabsContent>
+
+        <TabsContent value="integracoes" className="mt-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>YouTube</CardTitle>
+              <CardDescription>
+                Credenciais de integração obtidas no Google Cloud Console.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FieldGroup>
+                <Controller
+                  control={form.control}
+                  name="youtubeApiKey"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="settings-youtube-api-key">
+                        Chave de API (API Key)
+                      </FieldLabel>
+                      <Input
+                        id="settings-youtube-api-key"
+                        placeholder="AIzaSy..."
+                        disabled={isSubmitting}
+                        {...field}
+                      />
+                      <FieldDescription>
+                        Obtenha sua chave no Google Cloud Console.
+                      </FieldDescription>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  control={form.control}
+                  name="youtubeChannelId"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="settings-youtube-channel-id">
+                        ID do Canal (Channel ID)
+                      </FieldLabel>
+                      <Input
+                        id="settings-youtube-channel-id"
+                        placeholder="UC..."
+                        disabled={isSubmitting}
+                        {...field}
+                      />
+                      <FieldDescription>
+                        Identificador único do canal no YouTube.
+                      </FieldDescription>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Meta (Instagram & Facebook)</CardTitle>
+              <CardDescription>
+                Credenciais de integração obtidas no Meta for Developers.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FieldGroup>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Controller
+                    control={form.control}
+                    name="metaAppId"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="settings-meta-app-id">
+                          App ID da Meta
+                        </FieldLabel>
+                        <Input
+                          id="settings-meta-app-id"
+                          placeholder="123456789..."
+                          disabled={isSubmitting}
+                          {...field}
+                        />
+                        <FieldDescription>
+                          ID do aplicativo no Meta for Developers.
+                        </FieldDescription>
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    control={form.control}
+                    name="metaAppSecret"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="settings-meta-app-secret">
+                          App Secret da Meta
+                        </FieldLabel>
+                        <Input
+                          id="settings-meta-app-secret"
+                          type="password"
+                          placeholder="••••••••"
+                          disabled={isSubmitting}
+                          {...field}
+                        />
+                        <FieldDescription>
+                          Chave secreta do aplicativo para renovação autônoma de tokens.
+                        </FieldDescription>
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Controller
+                    control={form.control}
+                    name="instagramAccountId"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="settings-instagram-account-id">
+                          ID da Conta do Instagram
+                        </FieldLabel>
+                        <Input
+                          id="settings-instagram-account-id"
+                          placeholder="17841..."
+                          disabled={isSubmitting}
+                          {...field}
+                        />
+                        <FieldDescription>
+                          Obtido no portal Meta for Developers.
+                        </FieldDescription>
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    control={form.control}
+                    name="facebookPageId"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="settings-facebook-page-id">
+                          ID da Página do Facebook
+                        </FieldLabel>
+                        <Input
+                          id="settings-facebook-page-id"
+                          placeholder="1000..."
+                          disabled={isSubmitting}
+                          {...field}
+                        />
+                        <FieldDescription>
+                          Obtido no portal Meta for Developers.
+                        </FieldDescription>
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                </div>
+
+                <Controller
+                  control={form.control}
+                  name="instagramAccessToken"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="settings-instagram-access-token">
+                        Token de Acesso do Instagram
+                      </FieldLabel>
+                      <Textarea
+                        id="settings-instagram-access-token"
+                        placeholder="EAAG..."
+                        rows={3}
+                        disabled={isSubmitting}
+                        {...field}
+                      />
+                      <FieldDescription>
+                        Token de longa duração obtido no Meta for Developers.
+                      </FieldDescription>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  control={form.control}
+                  name="facebookAccessToken"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="settings-facebook-access-token">
+                        Token de Acesso do Facebook
+                      </FieldLabel>
+                      <Textarea
+                        id="settings-facebook-access-token"
+                        placeholder="EAAG..."
+                        rows={3}
+                        disabled={isSubmitting}
+                        {...field}
+                      />
+                      <FieldDescription>
+                        Token de acesso da página obtido no Meta for Developers.
+                      </FieldDescription>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 

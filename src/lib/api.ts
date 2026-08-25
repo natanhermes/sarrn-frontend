@@ -80,6 +80,14 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    if (error.response?.data) {
+      const errObj = error as unknown as Record<string, unknown>;
+      if (!errObj._logged) {
+        console.error("Detalhes do Erro API:", error.response.data);
+        errObj._logged = true;
+      }
+    }
+
     const originalRequest = error.config as RetryableRequest | undefined;
 
     if (

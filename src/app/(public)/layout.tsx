@@ -1,3 +1,4 @@
+import { FloatingDonateButton } from "@/components/public/floating-donate-button";
 import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader, type HeaderMenuItem } from "@/components/public/site-header";
 import { getPublicAboutUs, getPublicPagesMenu } from "@/lib/public-api";
@@ -56,6 +57,7 @@ export default async function PublicLayout({
         transparenciaMenuItems={transparenciaMenuItems}
       />
       <div className="min-w-0 flex-1">{children}</div>
+      <FloatingDonateButton />
       <SiteFooter />
     </div>
   );

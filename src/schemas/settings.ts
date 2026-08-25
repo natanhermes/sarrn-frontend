@@ -43,6 +43,24 @@ export const siteSettingsSchema = z
     location_text: optionalTextSchema.optional(),
     googleMapsUrl: optionalTextSchema.optional(),
     google_maps_url: optionalTextSchema.optional(),
+    donationPixPayload: optionalTextSchema.optional(),
+    donation_pix_payload: optionalTextSchema.optional(),
+    youtubeApiKey: optionalTextSchema.optional(),
+    youtube_api_key: optionalTextSchema.optional(),
+    youtubeChannelId: optionalTextSchema.optional(),
+    youtube_channel_id: optionalTextSchema.optional(),
+    instagramAccessToken: optionalTextSchema.optional(),
+    instagram_access_token: optionalTextSchema.optional(),
+    instagramAccountId: optionalTextSchema.optional(),
+    instagram_account_id: optionalTextSchema.optional(),
+    facebookAccessToken: optionalTextSchema.optional(),
+    facebook_access_token: optionalTextSchema.optional(),
+    facebookPageId: optionalTextSchema.optional(),
+    facebook_page_id: optionalTextSchema.optional(),
+    metaAppId: optionalTextSchema.optional(),
+    meta_app_id: optionalTextSchema.optional(),
+    metaAppSecret: optionalTextSchema.optional(),
+    meta_app_secret: optionalTextSchema.optional(),
   })
   .passthrough()
   .transform((settings) => ({
@@ -69,6 +87,20 @@ export const siteSettingsSchema = z
     whatsappNumber: settings.whatsappNumber || settings.whatsapp_number || "",
     locationText: settings.locationText || settings.location_text || "",
     googleMapsUrl: settings.googleMapsUrl || settings.google_maps_url || "",
+    donationPixPayload:
+      settings.donationPixPayload || settings.donation_pix_payload || "",
+    youtubeApiKey: settings.youtubeApiKey || settings.youtube_api_key || "",
+    youtubeChannelId:
+      settings.youtubeChannelId || settings.youtube_channel_id || "",
+    instagramAccessToken:
+      settings.instagramAccessToken || settings.instagram_access_token || "",
+    instagramAccountId:
+      settings.instagramAccountId || settings.instagram_account_id || "",
+    facebookAccessToken:
+      settings.facebookAccessToken || settings.facebook_access_token || "",
+    facebookPageId: settings.facebookPageId || settings.facebook_page_id || "",
+    metaAppId: settings.metaAppId || settings.meta_app_id || "",
+    metaAppSecret: settings.metaAppSecret || settings.meta_app_secret || "",
   }));
 
 export const siteSettingsFormSchema = z.object({
@@ -144,6 +176,42 @@ export const siteSettingsFormSchema = z.object({
     .string()
     .max(18, "O CNPJ deve ter no máximo 18 caracteres")
     .optional(),
+  donationPixPayload: z
+    .string()
+    .max(2000, "O código Pix deve ter no máximo 2000 caracteres")
+    .optional(),
+  youtubeApiKey: z
+    .string()
+    .max(500, "A chave de API do YouTube deve ter no máximo 500 caracteres")
+    .optional(),
+  youtubeChannelId: z
+    .string()
+    .max(255, "O ID do canal do YouTube deve ter no máximo 255 caracteres")
+    .optional(),
+  instagramAccessToken: z
+    .string()
+    .max(2000, "O token do Instagram deve ter no máximo 2000 caracteres")
+    .optional(),
+  instagramAccountId: z
+    .string()
+    .max(255, "O ID da conta do Instagram deve ter no máximo 255 caracteres")
+    .optional(),
+  facebookAccessToken: z
+    .string()
+    .max(2000, "O token do Facebook deve ter no máximo 2000 caracteres")
+    .optional(),
+  facebookPageId: z
+    .string()
+    .max(255, "O ID da página do Facebook deve ter no máximo 255 caracteres")
+    .optional(),
+  metaAppId: z
+    .string()
+    .max(255, "O App ID da Meta deve ter no máximo 255 caracteres")
+    .optional(),
+  metaAppSecret: z
+    .string()
+    .max(500, "O App Secret da Meta deve ter no máximo 500 caracteres")
+    .optional(),
 });
 
 export type SiteSettings = z.infer<typeof siteSettingsSchema>;
@@ -187,6 +255,15 @@ export function toSiteSettingsSubmitPayload(values: SiteSettingsFormValues) {
     bankAgency: optionalOrNull(values.bankAgency),
     bankAccount: optionalOrNull(values.bankAccount),
     documentCnpj: optionalOrNull(values.documentCnpj),
+    donationPixPayload: optionalOrNull(values.donationPixPayload),
+    youtubeApiKey: optionalOrNull(values.youtubeApiKey),
+    youtubeChannelId: optionalOrNull(values.youtubeChannelId),
+    instagramAccessToken: optionalOrNull(values.instagramAccessToken),
+    instagramAccountId: optionalOrNull(values.instagramAccountId),
+    facebookAccessToken: optionalOrNull(values.facebookAccessToken),
+    facebookPageId: optionalOrNull(values.facebookPageId),
+    metaAppId: optionalOrNull(values.metaAppId),
+    metaAppSecret: optionalOrNull(values.metaAppSecret),
   };
 }
 

@@ -157,7 +157,7 @@ export function toContentBlockFormValues(
   blocks: ContentBlock[],
 ): ContentBlockFormValues[] {
   if (blocks.length === 0) {
-    return [emptyContentBlock("TEXT")];
+    return [];
   }
 
   return blocks.map((block) => ({

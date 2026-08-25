@@ -10,7 +10,9 @@ import {
   LayoutDashboardIcon,
   LayersIcon,
   NewspaperIcon,
+  RadioIcon,
   SettingsIcon,
+  Share2Icon,
   UsersIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -50,6 +52,12 @@ const navItems: NavItem[] = [
     label: "Publicações",
     href: "/dashboard/posts",
     icon: FileTextIcon,
+  },
+  {
+    label: "Redes Sociais",
+    href: "/dashboard/social-feed",
+    icon: Share2Icon,
+    roles: ["ADMIN", "EDITOR"],
   },
   {
     label: "Carrossel",

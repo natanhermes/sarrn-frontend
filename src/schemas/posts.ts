@@ -12,8 +12,10 @@ export const postTypeSchema = z.enum([
   "NEWS",
   "DOCUMENT",
   "BOOKLET",
+  "EBOOK",
   "ARTICLE",
   "REPORT",
+  "LIBRARY",
 ]);
 export const postStatusSchema = z.enum(["DRAFT", "PUBLISHED", "SCHEDULED"]);
 export const executionStatusSchema = z.enum([
@@ -223,7 +225,9 @@ export const postFormSchema = z
     title: z.string().min(1, "Informe o título"),
     summary: z.string().optional(),
     coverImageUrl: z.string().optional(),
-    blocks: z.array(contentBlockFormSchema),
+    blocks: z
+      .array(contentBlockFormSchema)
+      .min(1, "A publicação deve conter pelo menos um bloco de conteúdo."),
     status: postStatusSchema,
     manualPublishedAt: z.boolean(),
     publishedAt: z.string().optional(),
@@ -433,8 +437,10 @@ export const postTypeLabels: Record<PostType, string> = {
   NEWS: "Notícia",
   DOCUMENT: "Documento",
   BOOKLET: "Cartilha",
+  EBOOK: "E-book",
   ARTICLE: "Artigo",
   REPORT: "Relatório",
+  LIBRARY: "Biblioteca",
 };
 
 export const postStatusLabels: Record<PostStatus, string> = {
@@ -452,10 +458,10 @@ export const executionStatusLabels: Record<ExecutionStatus, string> = {
 export const postTypeSelectItems = [
   { value: "PROJECT" as const, label: postTypeLabels.PROJECT },
   { value: "NEWS" as const, label: postTypeLabels.NEWS },
-  { value: "DOCUMENT" as const, label: postTypeLabels.DOCUMENT },
   { value: "BOOKLET" as const, label: postTypeLabels.BOOKLET },
   { value: "ARTICLE" as const, label: postTypeLabels.ARTICLE },
-  { value: "REPORT" as const, label: postTypeLabels.REPORT },
+  { value: "EBOOK" as const, label: postTypeLabels.EBOOK },
+  { value: "LIBRARY" as const, label: postTypeLabels.LIBRARY },
 ];
 
 export const postStatusSelectItems = [

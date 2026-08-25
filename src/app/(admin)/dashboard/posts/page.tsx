@@ -61,20 +61,22 @@ const DEFAULT_PAGE_SIZE = 10;
 const pageTitleByType: Record<PostType, string> = {
   PROJECT: "Projetos",
   NEWS: "Notícias",
-  DOCUMENT: "Documentos",
   BOOKLET: "Cartilhas",
+  EBOOK: "E-books",
   ARTICLE: "Artigos",
+  DOCUMENT: "Documentos",
   REPORT: "Relatórios",
+  LIBRARY: "Biblioteca",
 };
 
 const typeFilters: { value: PostType | null; label: string }[] = [
   { value: null, label: "Todas" },
   { value: "PROJECT", label: "Projetos" },
   { value: "NEWS", label: "Notícias" },
-  { value: "DOCUMENT", label: "Documentos" },
   { value: "BOOKLET", label: "Cartilhas" },
   { value: "ARTICLE", label: "Artigos" },
-  { value: "REPORT", label: "Relatórios" },
+  { value: "EBOOK", label: "E-books" },
+  { value: "LIBRARY", label: "Biblioteca" },
 ];
 
 function PostsPageContent() {

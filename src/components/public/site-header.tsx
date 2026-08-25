@@ -22,13 +22,20 @@ import {
   type InstitutionalPageMenuItem,
 } from "@/schemas/institutional-pages";
 
-const staticLinks = [
-  { label: "Início", href: "/#inicio" },
+const homeLink = { label: "Início", href: "/#inicio" };
+const sectionLinks = [
   { label: "Projetos", href: "/#projetos" },
   { label: "Notícias", href: "/#noticias" },
-  { label: "Agenda", href: "/agenda" },
-  { label: "Publicações", href: "/publicacoes" },
 ];
+const agendaLink = { label: "Agenda", href: "/agenda" };
+
+const publicacoesMenuItems = [
+  { id: "cartilhas", title: "Cartilhas", href: "/publicacoes?type=BOOKLET" },
+  { id: "ebooks", title: "E-books", href: "/publicacoes?type=EBOOK" },
+  { id: "artigos", title: "Artigos", href: "/publicacoes?type=ARTICLE" },
+  { id: "biblioteca", title: "Biblioteca", href: "/publicacoes?type=LIBRARY" },
+];
+
 
 export type HeaderMenuItem = {
   id: string;
@@ -123,15 +130,13 @@ export function SiteHeader({
           </Link>
 
           <nav className="hidden items-center gap-1 lg:flex">
-            {staticLinks.slice(0, 1).map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="rounded-md px-3 py-2 text-sm font-medium text-white/90 transition-colors hover:text-white"
-              >
-                {link.label}
-              </a>
-            ))}
+            <a
+              key={homeLink.href}
+              href={homeLink.href}
+              className="rounded-md px-3 py-2 text-sm font-medium text-white/90 transition-colors hover:text-white"
+            >
+              {homeLink.label}
+            </a>
 
             {sarList.length > 0 || transparenciaList.length > 0 ? (
               <NavigationMenu className="max-w-none">
@@ -169,7 +174,7 @@ export function SiteHeader({
               </NavigationMenu>
             ) : null}
 
-            {staticLinks.slice(1).map((link) => (
+            {sectionLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
@@ -178,6 +183,39 @@ export function SiteHeader({
                 {link.label}
               </a>
             ))}
+
+            <NavigationMenu className="max-w-none">
+              <NavigationMenuList className="gap-0">
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className={navTriggerClassName}>
+                    Publicações
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent className="min-w-56 p-2">
+                    <ul className="flex flex-col gap-1">
+                      {publicacoesMenuItems.map((item) => (
+                        <li key={item.id}>
+                          <NavigationMenuLink
+                            closeOnClick
+                            render={<Link href={item.href} />}
+                            className="block rounded-md px-3 py-2 text-sm text-foreground hover:bg-muted"
+                          >
+                            {item.title}
+                          </NavigationMenuLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+
+            <a
+              key={agendaLink.href}
+              href={agendaLink.href}
+              className="rounded-md px-3 py-2 text-sm font-medium text-white/90 transition-colors hover:text-white"
+            >
+              {agendaLink.label}
+            </a>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -185,7 +223,7 @@ export function SiteHeader({
               size="lg"
               nativeButton={false}
               className="hidden bg-brand-green text-white hover:bg-brand-green/90 sm:inline-flex"
-              render={<Link href="/#doacoes" />}
+              render={<Link href="/doar" />}
             >
               Doar agora
             </Button>
@@ -204,16 +242,14 @@ export function SiteHeader({
         {open ? (
           <div className="border-t border-white/15 bg-[#356e7c] px-5 py-4 lg:hidden">
             <nav className="flex flex-col gap-1">
-              {staticLinks.slice(0, 1).map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="rounded-md px-3 py-2.5 text-sm font-medium text-white hover:bg-white/10"
-                >
-                  {link.label}
-                </a>
-              ))}
+              <a
+                key={homeLink.href}
+                href={homeLink.href}
+                onClick={() => setOpen(false)}
+                className="rounded-md px-3 py-2.5 text-sm font-medium text-white hover:bg-white/10"
+              >
+                {homeLink.label}
+              </a>
 
               {(
                 [
@@ -242,7 +278,7 @@ export function SiteHeader({
                 ) : null,
               )}
 
-              {staticLinks.slice(1).map((link) => (
+              {sectionLinks.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
@@ -252,12 +288,39 @@ export function SiteHeader({
                   {link.label}
                 </a>
               ))}
+
+              <div className="pt-2">
+                <p className="px-3 text-xs font-semibold tracking-wide text-white/60 uppercase">
+                  Publicações
+                </p>
+                <div className="mt-1 flex flex-col">
+                  {publicacoesMenuItems.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className="rounded-md px-3 py-2.5 text-sm font-medium text-white hover:bg-white/10"
+                    >
+                      {item.title}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <a
+                key={agendaLink.href}
+                href={agendaLink.href}
+                onClick={() => setOpen(false)}
+                className="rounded-md px-3 py-2.5 text-sm font-medium text-white hover:bg-white/10"
+              >
+                {agendaLink.label}
+              </a>
               <Button
                 className="mt-2 bg-brand-green text-white hover:bg-brand-green/90"
                 size="lg"
                 nativeButton={false}
                 render={
-                  <Link href="/#doacoes" onClick={() => setOpen(false)} />
+                  <Link href="/doar" onClick={() => setOpen(false)} />
                 }
               >
                 Doar agora

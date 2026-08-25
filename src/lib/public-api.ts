@@ -47,6 +47,10 @@ import {
   type SiteSettings,
 } from "@/schemas/settings";
 import {
+  parseSocialFeedList,
+  type SocialFeedItem,
+} from "@/schemas/social-feed";
+import {
   parseStatisticsList,
   type Statistic,
 } from "@/schemas/statistics";
@@ -66,6 +70,7 @@ export type PublicStatistic = Statistic;
 export type PublicEvent = Event;
 export type PublicEventSummary = EventSummary;
 export type PublicEventSummariesPage = EventSummariesPage;
+export type PublicSocialFeedItem = SocialFeedItem;
 
 export type GetPublicEventsParams = {
   upcoming?: boolean;
@@ -769,4 +774,49 @@ export function getPublicPostCoverUrl(post: PublicPost) {
     resolvePublicMediaUrl(firstGalleryImage) ||
     "/placeholder.svg"
   );
+}
+
+function buildPublicSocialFeedUrl() {
+  const baseUrl = getApiBaseUrl();
+
+  if (!baseUrl) {
+    return null;
+  }
+
+  const cleanBaseUrl = baseUrl.replace(/\/$/, "");
+  const path = cleanBaseUrl.endsWith("/api/v1")
+    ? "/public/social-feed"
+    : "/api/v1/public/social-feed";
+
+  return `${cleanBaseUrl}${path}`;
+}
+
+export async function getPublicSocialFeed(): Promise<PublicSocialFeedItem[]> {
+  const endpoint = buildPublicSocialFeedUrl();
+
+  if (!endpoint) {
+    return [];
+  }
+
+  try {
+    const response = await fetch(endpoint, {
+      next: {
+        tags: [CACHE_TAGS.socialFeed],
+      },
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return [];
+    }
+
+    const payload: unknown = await response.json();
+    return parseSocialFeedList(payload);
+  } catch {
+    return [];
+  }
 }
