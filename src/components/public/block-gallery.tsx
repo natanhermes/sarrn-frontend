@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import { useState } from "react";
 
+import { LightboxModal } from "@/components/public/lightbox-modal";
 import { Button } from "@/components/ui/button";
 import { resolvePublicMediaUrl } from "@/lib/public-api";
 import { isVideoUrl } from "@/lib/upload";
@@ -17,18 +18,35 @@ export function BlockGallery({ images, title }: BlockGalleryProps) {
   const items = images
     .map((url) => resolvePublicMediaUrl(url) || url)
     .filter(Boolean);
+
   const [activeIndex, setActiveIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   if (items.length === 0) {
     return null;
   }
+
+  // Prepara os slides apenas para imagens (ignora vídeos no lightbox se houver)
+  const imageItems = items.filter((url) => !isVideoUrl(url));
+  const slides = imageItems.map((url) => ({ src: url, alt: title }));
+
+  const openLightboxForCurrent = (index: number) => {
+    const currentUrl = items[index];
+    if (isVideoUrl(currentUrl)) {
+      return;
+    }
+    const imgIndex = imageItems.indexOf(currentUrl);
+    setLightboxIndex(imgIndex >= 0 ? imgIndex : 0);
+    setLightboxOpen(true);
+  };
 
   if (items.length === 1) {
     const singleUrl = items[0];
     const isVid = isVideoUrl(singleUrl);
 
     return (
-      <div className="w-full max-w-full overflow-hidden rounded-2xl border border-border bg-muted/20">
+      <div className="relative w-full max-w-full overflow-hidden rounded-2xl border border-border bg-muted/20">
         {isVid ? (
           <video
             src={singleUrl}
@@ -39,13 +57,33 @@ export function BlockGallery({ images, title }: BlockGalleryProps) {
             className="aspect-[16/10] h-auto w-full max-w-full object-cover"
           />
         ) : (
-          <img
-            src={singleUrl}
-            alt={`${title} — mídia 1`}
-            className="aspect-[16/10] h-auto w-full max-w-full object-cover"
-            loading="lazy"
-          />
+          <div className="group relative aspect-[16/10] w-full cursor-pointer overflow-hidden">
+            <img
+              src={singleUrl}
+              alt={`${title} — mídia 1`}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+              onClick={() => openLightboxForCurrent(0)}
+            />
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              className="absolute bottom-3 right-3 z-20 gap-1.5 rounded-full bg-brand-black/70 text-xs font-semibold text-white backdrop-blur-md hover:bg-brand-black/90"
+              onClick={() => openLightboxForCurrent(0)}
+            >
+              <Maximize2 className="size-3.5" />
+              Ampliar
+            </Button>
+          </div>
         )}
+
+        <LightboxModal
+          open={lightboxOpen}
+          close={() => setLightboxOpen(false)}
+          slides={slides}
+          index={lightboxIndex}
+        />
       </div>
     );
   }
@@ -61,7 +99,7 @@ export function BlockGallery({ images, title }: BlockGalleryProps) {
 
   return (
     <div className="relative w-full max-w-full overflow-hidden rounded-2xl border border-border bg-muted/20">
-      <div className="relative aspect-[16/10] w-full overflow-hidden">
+      <div className="group relative aspect-[16/10] w-full overflow-hidden">
         {items.map((url, index) => {
           const isVid = isVideoUrl(url);
 
@@ -77,8 +115,8 @@ export function BlockGallery({ images, title }: BlockGalleryProps) {
                 className={cn(
                   "absolute inset-0 h-full w-full max-w-full object-cover transition-opacity duration-500",
                   index === activeIndex
-                    ? "opacity-100 pointer-events-auto z-10"
-                    : "opacity-0 pointer-events-none z-0",
+                    ? "pointer-events-auto z-10 opacity-100"
+                    : "pointer-events-none z-0 opacity-0",
                 )}
               />
             );
@@ -90,20 +128,34 @@ export function BlockGallery({ images, title }: BlockGalleryProps) {
               src={url}
               alt={`${title} — mídia ${index + 1}`}
               className={cn(
-                "absolute inset-0 h-full w-full max-w-full object-cover transition-opacity duration-500",
-                index === activeIndex ? "opacity-100 z-10" : "opacity-0 z-0",
+                "absolute inset-0 h-full w-full cursor-pointer max-w-full object-cover transition-opacity duration-500",
+                index === activeIndex ? "z-10 opacity-100" : "z-0 opacity-0",
               )}
               loading={index === 0 ? "eager" : "lazy"}
+              onClick={() => openLightboxForCurrent(index)}
             />
           );
         })}
+
+        {!isVideoUrl(items[activeIndex]) ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            className="absolute bottom-16 right-4 z-30 gap-1.5 rounded-full bg-brand-black/70 text-xs font-semibold text-white backdrop-blur-md hover:bg-brand-black/90"
+            onClick={() => openLightboxForCurrent(activeIndex)}
+          >
+            <Maximize2 className="size-3.5" />
+            Ampliar
+          </Button>
+        ) : null}
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 z-20 flex items-center justify-between gap-3 bg-gradient-to-t from-brand-black/70 to-transparent p-4">
+      <div className="absolute inset-x-0 bottom-0 z-20 flex items-center justify-between gap-3 bg-gradient-to-t from-brand-black/80 via-brand-black/40 to-transparent p-4">
         <p className="text-sm font-medium text-white">
           {activeIndex + 1} / {items.length}
         </p>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Button
             type="button"
             size="icon-sm"
@@ -124,6 +176,13 @@ export function BlockGallery({ images, title }: BlockGalleryProps) {
           </Button>
         </div>
       </div>
+
+      <LightboxModal
+        open={lightboxOpen}
+        close={() => setLightboxOpen(false)}
+        slides={slides}
+        index={lightboxIndex}
+      />
     </div>
   );
 }

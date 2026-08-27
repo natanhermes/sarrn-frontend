@@ -691,15 +691,15 @@ export function SiteSettingsForm({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Controller
                     control={form.control}
-                    name="instagramAccountId"
+                    name="facebookPageId"
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="settings-instagram-account-id">
-                          ID da Conta do Instagram
+                        <FieldLabel htmlFor="settings-facebook-page-id">
+                          ID da Página do Facebook
                         </FieldLabel>
                         <Input
-                          id="settings-instagram-account-id"
-                          placeholder="17841..."
+                          id="settings-facebook-page-id"
+                          placeholder="1000..."
                           disabled={isSubmitting}
                           {...field}
                         />
@@ -715,15 +715,15 @@ export function SiteSettingsForm({
 
                   <Controller
                     control={form.control}
-                    name="facebookPageId"
+                    name="instagramAccountId"
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="settings-facebook-page-id">
-                          ID da Página do Facebook
+                        <FieldLabel htmlFor="settings-instagram-account-id">
+                          ID da Conta do Instagram
                         </FieldLabel>
                         <Input
-                          id="settings-facebook-page-id"
-                          placeholder="1000..."
+                          id="settings-instagram-account-id"
+                          placeholder="17841..."
                           disabled={isSubmitting}
                           {...field}
                         />

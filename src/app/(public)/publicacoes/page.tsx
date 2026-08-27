@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 
 import { PostsCatalog } from "@/components/public/posts-catalog";
 import {
+  resolveCatalogDate,
   resolveCatalogPage,
+  resolveCatalogSearch,
   resolveCatalogType,
-  resolveCatalogYear,
 } from "@/lib/catalog-filters";
 import { getPublicPostsPage } from "@/lib/public-api";
 import type { PostType } from "@/schemas/posts";
@@ -19,7 +20,12 @@ const PAGE_SIZE = 9;
 const ALLOWED_TYPES: PostType[] = ["BOOKLET", "EBOOK", "ARTICLE", "LIBRARY"];
 
 type PublicacoesPageProps = {
-  searchParams: Promise<{ page?: string; type?: string; year?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    type?: string;
+    search?: string;
+    date?: string;
+  }>;
 };
 
 export default async function PublicacoesPage({
@@ -27,14 +33,15 @@ export default async function PublicacoesPage({
 }: PublicacoesPageProps) {
   const params = await searchParams;
   const pageOneBased = resolveCatalogPage(params.page);
-  const year = resolveCatalogYear(params.year);
+  const search = resolveCatalogSearch(params.search);
+  const date = resolveCatalogDate(params.date);
   const type = resolveCatalogType(params.type, ALLOWED_TYPES);
-  const activeType =
-    typeof type === "string" ? type : undefined;
+  const activeType = typeof type === "string" ? type : undefined;
 
   const pageData = await getPublicPostsPage({
     type,
-    year,
+    search,
+    date,
     page: pageOneBased - 1,
     size: PAGE_SIZE,
   });
@@ -48,7 +55,6 @@ export default async function PublicacoesPage({
       basePath="/publicacoes"
       pageData={pageData}
       activeType={activeType}
-      activeYear={year}
       filterTypes={[
         { value: "BOOKLET", label: "Cartilhas" },
         { value: "EBOOK", label: "E-books" },

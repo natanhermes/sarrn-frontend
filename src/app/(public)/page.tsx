@@ -39,7 +39,7 @@ export default async function HomePage() {
     socialFeed,
   ] = await Promise.all([
     getPublicPosts("PROJECT", 3),
-    getPublicPosts(["NEWS", "ARTICLE"], 4),
+    getPublicPosts(["NEWS", "ARTICLE"], 5),
     getPublicCarouselSlides(),
     getPublicFundersGrouped(),
     getPublicActionLines(),

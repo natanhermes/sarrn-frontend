@@ -36,7 +36,7 @@ export function NoticiasSection({ news }: NoticiasSectionProps) {
             nativeButton={false}
             render={<Link href="/noticias" />}
           >
-            Ver todas as notícias e artigos
+            Ver todas as notícias
             <ArrowRight className="size-4" />
           </Button>
         </div>

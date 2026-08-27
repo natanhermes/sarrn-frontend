@@ -19,7 +19,6 @@ type PostsCatalogProps = {
   pageData: PublicPostsPage;
   filterTypes?: PostsFilterTypeOption[];
   activeType?: string;
-  activeYear?: number;
 };
 
 export function PostsCatalog({
@@ -31,7 +30,6 @@ export function PostsCatalog({
   pageData,
   filterTypes = [],
   activeType,
-  activeYear,
 }: PostsCatalogProps) {
   const posts = pageData.content;
   const currentPage = (pageData.number ?? 0) + 1;
@@ -40,7 +38,6 @@ export function PostsCatalog({
   const isLast = pageData.last ?? currentPage >= totalPages;
   const filters = {
     type: activeType,
-    year: activeYear,
   };
 
   return (

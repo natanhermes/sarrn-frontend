@@ -78,6 +78,8 @@ export type GetPublicEventsParams = {
   month?: number;
   page?: number;
   size?: number;
+  search?: string;
+  date?: string;
 };
 
 export type GetPublicPostsParams = {
@@ -85,6 +87,8 @@ export type GetPublicPostsParams = {
   page?: number;
   size?: number;
   year?: number;
+  search?: string;
+  date?: string;
 };
 
 function getApiBaseUrl() {
@@ -123,6 +127,15 @@ function buildPublicPostsUrl(params: GetPublicPostsParams = {}) {
 
   if (typeof params.year === "number") {
     url.searchParams.set("year", String(params.year));
+  }
+
+  if (params.search?.trim()) {
+    url.searchParams.set("search", params.search.trim());
+    url.searchParams.set("query", params.search.trim());
+  }
+
+  if (params.date?.trim()) {
+    url.searchParams.set("date", params.date.trim());
   }
 
   url.searchParams.set("sort", "publishedAt,desc");
@@ -183,6 +196,24 @@ export async function getPublicPostsPage(
       const dateB = new Date(b.publishedAt || b.createdAt || 0).getTime();
       return dateB - dateA;
     });
+
+    if (params.search?.trim()) {
+      const q = params.search.trim().toLowerCase();
+      page.content = page.content.filter(
+        (post) =>
+          post.title.toLowerCase().includes(q) ||
+          post.summary?.toLowerCase().includes(q),
+      );
+    }
+
+    if (params.date?.trim()) {
+      const targetDate = params.date.trim();
+      page.content = page.content.filter((post) => {
+        const postDate = (post.publishedAt || post.createdAt || "").split("T")[0];
+        return postDate === targetDate;
+      });
+    }
+
     return page;
   } catch {
     return {
@@ -649,6 +680,15 @@ function buildPublicEventsUrl(params: GetPublicEventsParams = {}) {
     url.searchParams.set("size", String(params.size));
   }
 
+  if (params.search?.trim()) {
+    url.searchParams.set("search", params.search.trim());
+    url.searchParams.set("query", params.search.trim());
+  }
+
+  if (params.date?.trim()) {
+    url.searchParams.set("date", params.date.trim());
+  }
+
   url.searchParams.set("sort", "startDate,desc");
 
   return url.toString();
@@ -707,6 +747,25 @@ export async function getPublicEventsPage(
       const dateB = new Date(b.startDate || 0).getTime();
       return dateB - dateA;
     });
+
+    if (params.search?.trim()) {
+      const q = params.search.trim().toLowerCase();
+      page.content = page.content.filter(
+        (event) =>
+          event.title.toLowerCase().includes(q) ||
+          event.summary?.toLowerCase().includes(q) ||
+          event.location?.toLowerCase().includes(q),
+      );
+    }
+
+    if (params.date?.trim()) {
+      const targetDate = params.date.trim();
+      page.content = page.content.filter((event) => {
+        const eventDate = (event.startDate || "").split("T")[0];
+        return eventDate === targetDate;
+      });
+    }
+
     return page;
   } catch {
     return {

@@ -2,24 +2,30 @@ import type { Metadata } from "next";
 
 import { PostsCatalog } from "@/components/public/posts-catalog";
 import {
+  resolveCatalogDate,
   resolveCatalogPage,
+  resolveCatalogSearch,
   resolveCatalogType,
-  resolveCatalogYear,
 } from "@/lib/catalog-filters";
 import { getPublicPostsPage } from "@/lib/public-api";
 import type { PostType } from "@/schemas/posts";
 
 export const metadata: Metadata = {
-  title: "Notícias e Artigos — SAR",
+  title: "Notícias — SAR",
   description:
-    "Acompanhe as últimas notícias e artigos do SAR sobre agroecologia, educação e desenvolvimento comunitário no semiárido potiguar.",
+    "Acompanhe as últimas notícias do SAR sobre agroecologia, educação e desenvolvimento comunitário no semiárido potiguar.",
 };
 
 const PAGE_SIZE = 9;
-const ALLOWED_TYPES: PostType[] = ["NEWS", "ARTICLE"];
+const ALLOWED_TYPES: PostType[] = ["NEWS"];
 
 type NoticiasPageProps = {
-  searchParams: Promise<{ page?: string; type?: string; year?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    type?: string;
+    search?: string;
+    date?: string;
+  }>;
 };
 
 export default async function NoticiasPage({
@@ -27,14 +33,14 @@ export default async function NoticiasPage({
 }: NoticiasPageProps) {
   const params = await searchParams;
   const pageOneBased = resolveCatalogPage(params.page);
-  const year = resolveCatalogYear(params.year);
+  const search = resolveCatalogSearch(params.search);
+  const date = resolveCatalogDate(params.date);
   const type = resolveCatalogType(params.type, ALLOWED_TYPES);
-  const activeType =
-    typeof type === "string" ? type : undefined;
 
   const pageData = await getPublicPostsPage({
     type,
-    year,
+    search,
+    date,
     page: pageOneBased - 1,
     size: PAGE_SIZE,
   });
@@ -43,16 +49,10 @@ export default async function NoticiasPage({
     <PostsCatalog
       eyebrow="Notícias"
       title="Últimas Notícias"
-      description="Acompanhe matérias e artigos sobre os projetos, ações e impactos do SAR nas comunidades do Rio Grande do Norte."
-      emptyMessage="Nenhuma notícia ou artigo encontrado com os filtros selecionados."
+      description="Acompanhe matérias sobre os projetos, ações e impactos do SAR nas comunidades do Rio Grande do Norte."
+      emptyMessage="Nenhuma notícia encontrada com os filtros selecionados."
       basePath="/noticias"
       pageData={pageData}
-      activeType={activeType}
-      activeYear={year}
-      filterTypes={[
-        { value: "NEWS", label: "Notícias" },
-        { value: "ARTICLE", label: "Artigos" },
-      ]}
     />
   );
 }

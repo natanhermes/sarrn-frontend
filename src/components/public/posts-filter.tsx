@@ -1,15 +1,12 @@
 "use client";
 
+import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 
+import { DatePickerInput } from "@/components/public/date-picker-input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { PostType } from "@/schemas/posts";
 
@@ -22,29 +19,40 @@ type PostsFilterProps = {
   types?: PostsFilterTypeOption[];
 };
 
-function buildYearOptions() {
-  const currentYear = new Date().getFullYear();
-  return Array.from({ length: 4 }, (_, index) => currentYear - index);
-}
-
 export function PostsFilter({ types = [] }: PostsFilterProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+
   const selectedType = searchParams.get("type");
-  const selectedYear = searchParams.get("year") ?? "all";
-  const yearOptions = buildYearOptions();
-  const yearItems = [
-    { value: "all", label: "Todos os anos" },
-    ...yearOptions.map((year) => ({
-      value: String(year),
-      label: String(year),
-    })),
-  ];
+  const selectedSearch = searchParams.get("search") ?? "";
+  const selectedDate = searchParams.get("date") ?? "";
+
+  const [searchTerm, setSearchTerm] = useState(selectedSearch);
+
+  // Sync state if URL searchParam changes externally
+  useEffect(() => {
+    setSearchTerm(selectedSearch);
+  }, [selectedSearch]);
+
+  // Debounced search update (500ms)
+  useEffect(() => {
+    if (searchTerm === selectedSearch) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      updateParams({ search: searchTerm });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, selectedSearch]);
 
   function updateParams(updates: {
     type?: string | null;
-    year?: string | null;
+    search?: string | null;
+    date?: string | null;
   }) {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -56,22 +64,72 @@ export function PostsFilter({ types = [] }: PostsFilterProps) {
       }
     }
 
-    if ("year" in updates) {
-      if (updates.year) {
-        params.set("year", updates.year);
+    if ("search" in updates) {
+      if (updates.search?.trim()) {
+        params.set("search", updates.search.trim());
       } else {
-        params.delete("year");
+        params.delete("search");
       }
     }
 
+    if ("date" in updates) {
+      if (updates.date?.trim()) {
+        params.set("date", updates.date.trim());
+      } else {
+        params.delete("date");
+      }
+    }
+
+    // Removido ano do filtro conforme solicitado
+    params.delete("year");
     params.delete("page");
 
     const query = params.toString();
-    router.push(query ? `${pathname}?${query}` : pathname);
+    const href = query ? `${pathname}?${query}` : pathname;
+
+    startTransition(() => {
+      router.push(href);
+    });
   }
 
   return (
-    <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="space-y-4">
+      {/* Top Filter Bar: Title search + Typable DatePickerInput */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        {/* Title Search Input (Debounced 500ms) */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar por título..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-8"
+          />
+          {searchTerm ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm("");
+                updateParams({ search: null });
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-4" />
+              <span className="sr-only">Limpar busca</span>
+            </button>
+          ) : null}
+        </div>
+
+        {/* Seletor de Data Digitável e com Popover */}
+        <DatePickerInput
+          value={selectedDate}
+          onChange={(nextDate) => updateParams({ date: nextDate })}
+          className="w-full sm:w-60"
+        />
+      </div>
+
+      {/* Category Type Pills */}
       {types.length > 0 ? (
         <div
           className="flex flex-wrap items-center gap-2"
@@ -84,7 +142,8 @@ export function PostsFilter({ types = [] }: PostsFilterProps) {
             variant={!selectedType ? "default" : "outline"}
             className={cn(
               "rounded-full",
-              !selectedType && "bg-brand-green text-white hover:bg-brand-green/90",
+              !selectedType &&
+                "bg-brand-green text-white hover:bg-brand-green/90",
             )}
             onClick={() => updateParams({ type: null })}
           >
@@ -112,33 +171,6 @@ export function PostsFilter({ types = [] }: PostsFilterProps) {
           })}
         </div>
       ) : null}
-
-      <Select
-        items={yearItems}
-        value={selectedYear}
-        onValueChange={(value) => {
-          if (value == null || value === "all") {
-            updateParams({ year: null });
-            return;
-          }
-
-          updateParams({ year: String(value) });
-        }}
-      >
-        <SelectTrigger
-          className="w-44 shrink-0 md:ml-auto"
-          aria-label="Filtrar por ano"
-        >
-          <SelectValue placeholder="Todos os anos" />
-        </SelectTrigger>
-        <SelectContent align="start">
-          {yearItems.map((item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
     </div>
   );
 }

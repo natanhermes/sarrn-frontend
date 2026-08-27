@@ -1,8 +1,12 @@
 "use client";
 
+import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 
+import { DatePickerInput } from "@/components/public/date-picker-input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -29,11 +33,6 @@ const MONTH_ITEMS = [
   { value: "12", label: "Dezembro" },
 ];
 
-function buildYearOptions() {
-  const currentYear = new Date().getFullYear();
-  return Array.from({ length: 5 }, (_, index) => currentYear - index);
-}
-
 function currentMonthParts() {
   const now = new Date();
   return {
@@ -48,21 +47,70 @@ type AgendaFilterProps = {
   month?: number;
 };
 
-export function AgendaFilter({ view, year, month }: AgendaFilterProps) {
+export function AgendaFilter({ view, month }: AgendaFilterProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const yearOptions = buildYearOptions();
-  const yearItems = yearOptions.map((value) => ({
-    value: String(value),
-    label: String(value),
-  }));
+  const [, startTransition] = useTransition();
+
+  const selectedSearch = searchParams.get("search") ?? "";
+  const selectedDate = searchParams.get("date") ?? "";
+
+  const [searchTerm, setSearchTerm] = useState(selectedSearch);
+
+  // Sync state if URL searchParam changes externally
+  useEffect(() => {
+    setSearchTerm(selectedSearch);
+  }, [selectedSearch]);
+
+  // Debounced search update (500ms)
+  useEffect(() => {
+    if (searchTerm === selectedSearch) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      updateSearchAndDate(searchTerm, undefined);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, selectedSearch]);
 
   function pushParams(next: URLSearchParams) {
     next.delete("page");
     next.delete("scope");
+    next.delete("year");
     const query = next.toString();
-    router.push(query ? `${pathname}?${query}` : pathname);
+    const href = query ? `${pathname}?${query}` : pathname;
+
+    startTransition(() => {
+      router.push(href);
+    });
+  }
+
+  function updateSearchAndDate(
+    searchVal?: string | null,
+    dateVal?: string | null,
+  ) {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (searchVal !== undefined) {
+      if (searchVal?.trim()) {
+        params.set("search", searchVal.trim());
+      } else {
+        params.delete("search");
+      }
+    }
+
+    if (dateVal !== undefined) {
+      if (dateVal?.trim()) {
+        params.set("date", dateVal.trim());
+      } else {
+        params.delete("date");
+      }
+    }
+
+    pushParams(params);
   }
 
   function setView(nextView: AgendaView) {
@@ -70,7 +118,6 @@ export function AgendaFilter({ view, year, month }: AgendaFilterProps) {
 
     if (nextView === "upcoming") {
       params.delete("view");
-      params.delete("year");
       params.delete("month");
       pushParams(params);
       return;
@@ -78,97 +125,111 @@ export function AgendaFilter({ view, year, month }: AgendaFilterProps) {
 
     const fallback = currentMonthParts();
     params.set("view", "past");
-    params.set("year", String(year ?? fallback.year));
     params.set("month", String(month ?? fallback.month));
     pushParams(params);
   }
 
-  function setPeriod(nextYear: string, nextMonth: string) {
+  function setMonth(nextMonth: string) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("view", "past");
-    params.set("year", nextYear);
     params.set("month", nextMonth);
     pushParams(params);
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <div
-        className="inline-flex w-fit rounded-lg border border-border bg-secondary/50 p-1"
-        role="tablist"
-        aria-label="Filtrar agenda"
-      >
-        {(
-          [
-            ["upcoming", "Próximos"],
-            ["past", "Anteriores"],
-          ] as const
-        ).map(([value, label]) => (
-          <Button
-            key={value}
-            type="button"
-            size="sm"
-            variant="ghost"
-            role="tab"
-            aria-selected={view === value}
-            className={cn(
-              "rounded-md px-4",
-              view === value
-                ? "bg-brand-green text-white hover:bg-brand-green/90 hover:text-white"
-                : "text-muted-foreground hover:bg-transparent hover:text-foreground",
-            )}
-            onClick={() => setView(value)}
-          >
-            {label}
-          </Button>
-        ))}
+      {/* Title Search + Typable DatePicker Bar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        {/* Title Search Input (Debounced 500ms) */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar evento por título..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-8"
+          />
+          {searchTerm ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm("");
+                updateSearchAndDate(null, undefined);
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-4" />
+              <span className="sr-only">Limpar busca</span>
+            </button>
+          ) : null}
+        </div>
+
+        {/* Seletor de Data Digitável e com Popover */}
+        <DatePickerInput
+          value={selectedDate}
+          onChange={(nextDate) => updateSearchAndDate(undefined, nextDate)}
+          className="w-full sm:w-60"
+        />
       </div>
 
-      {view === "past" ? (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Select
-            items={yearItems}
-            value={year ? String(year) : undefined}
-            onValueChange={(value) => {
-              if (value != null) {
-                setPeriod(value, String(month ?? currentMonthParts().month));
-              }
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-36">
-              <SelectValue placeholder="Ano" />
-            </SelectTrigger>
-            <SelectContent>
-              {yearItems.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            items={MONTH_ITEMS}
-            value={month ? String(month) : undefined}
-            onValueChange={(value) => {
-              if (value != null) {
-                setPeriod(String(year ?? currentMonthParts().year), value);
-              }
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-44">
-              <SelectValue placeholder="Mês" />
-            </SelectTrigger>
-            <SelectContent>
-              {MONTH_ITEMS.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className="inline-flex w-fit rounded-lg border border-border bg-secondary/50 p-1"
+          role="tablist"
+          aria-label="Filtrar agenda"
+        >
+          {(
+            [
+              ["upcoming", "Próximos"],
+              ["past", "Anteriores"],
+            ] as const
+          ).map(([value, label]) => (
+            <Button
+              key={value}
+              type="button"
+              size="sm"
+              variant="ghost"
+              role="tab"
+              aria-selected={view === value}
+              className={cn(
+                "rounded-md px-4",
+                view === value
+                  ? "bg-brand-green text-white hover:bg-brand-green/90 hover:text-white"
+                  : "text-muted-foreground hover:bg-transparent hover:text-foreground",
+              )}
+              onClick={() => setView(value)}
+            >
+              {label}
+            </Button>
+          ))}
         </div>
-      ) : null}
+
+        {view === "past" ? (
+          <div className="flex items-center gap-3">
+            <Select
+              items={MONTH_ITEMS}
+              value={month ? String(month) : undefined}
+              onValueChange={(value) => {
+                if (value != null) {
+                  setMonth(value);
+                }
+              }}
+            >
+              <SelectTrigger className="w-36">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {MONTH_ITEMS.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

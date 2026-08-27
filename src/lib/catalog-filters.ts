@@ -33,6 +33,23 @@ export function resolveCatalogYear(yearParam: string | undefined) {
   return year;
 }
 
+export function resolveCatalogSearch(searchParam: string | undefined) {
+  if (!searchParam?.trim()) {
+    return undefined;
+  }
+  return searchParam.trim();
+}
+
+export function resolveCatalogDate(dateParam: string | undefined) {
+  if (!dateParam?.trim()) {
+    return undefined;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateParam.trim())) {
+    return dateParam.trim();
+  }
+  return undefined;
+}
+
 export function resolveCatalogPage(pageParam: string | undefined) {
   const page = Number(pageParam ?? "1");
 
@@ -46,7 +63,7 @@ export function resolveCatalogPage(pageParam: string | undefined) {
 export function buildCatalogHref(
   basePath: string,
   pageOneBased: number,
-  filters: { type?: string; year?: number },
+  filters: { type?: string; year?: number; search?: string; date?: string },
 ) {
   const params = new URLSearchParams();
 
@@ -56,6 +73,14 @@ export function buildCatalogHref(
 
   if (filters.year) {
     params.set("year", String(filters.year));
+  }
+
+  if (filters.search) {
+    params.set("search", filters.search);
+  }
+
+  if (filters.date) {
+    params.set("date", filters.date);
   }
 
   if (pageOneBased > 1) {

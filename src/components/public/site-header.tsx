@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
+import { HeartHandshake, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -69,26 +69,26 @@ export function SiteHeader({
     sarMenuItems ??
     (menuItems
       ? menuItems
-          .filter((item) => item.menuGroup === "SAR")
-          .map((item) => ({
-            id: item.id,
-            title: item.title,
-            href: getInstitutionalPagePath(item.menuGroup, item.slug),
-            menuGroup: item.menuGroup,
-          }))
+        .filter((item) => item.menuGroup === "SAR")
+        .map((item) => ({
+          id: item.id,
+          title: item.title,
+          href: getInstitutionalPagePath(item.menuGroup, item.slug),
+          menuGroup: item.menuGroup,
+        }))
       : []);
 
   const transparenciaList: HeaderMenuItem[] =
     transparenciaMenuItems ??
     (menuItems
       ? menuItems
-          .filter((item) => item.menuGroup === "TRANSPARENCIA")
-          .map((item) => ({
-            id: item.id,
-            title: item.title,
-            href: getInstitutionalPagePath(item.menuGroup, item.slug),
-            menuGroup: item.menuGroup,
-          }))
+        .filter((item) => item.menuGroup === "TRANSPARENCIA")
+        .map((item) => ({
+          id: item.id,
+          title: item.title,
+          href: getInstitutionalPagePath(item.menuGroup, item.slug),
+          menuGroup: item.menuGroup,
+        }))
       : []);
 
   useEffect(() => {
@@ -222,10 +222,11 @@ export function SiteHeader({
             <Button
               size="lg"
               nativeButton={false}
-              className="hidden bg-brand-green text-white hover:bg-brand-green/90 sm:inline-flex"
+              className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-3.5 py-2 text-sm font-bold text-white shadow-md transition-all duration-300 hover:scale-105 hover:bg-orange-600 active:scale-95 md:px-5 md:py-2.5"
               render={<Link href="/doar" />}
             >
-              Doar agora
+              <HeartHandshake className="size-5 shrink-0 text-white" />
+              <span className="hidden md:inline">Doe Agora</span>
             </Button>
             <Button
               size="icon-lg"
@@ -316,14 +317,15 @@ export function SiteHeader({
                 {agendaLink.label}
               </a>
               <Button
-                className="mt-2 bg-brand-green text-white hover:bg-brand-green/90"
+                className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 font-bold text-white hover:bg-orange-600"
                 size="lg"
                 nativeButton={false}
                 render={
                   <Link href="/doar" onClick={() => setOpen(false)} />
                 }
               >
-                Doar agora
+                <HeartHandshake className="size-5 shrink-0 text-white" />
+                Doe Agora
               </Button>
             </nav>
           </div>

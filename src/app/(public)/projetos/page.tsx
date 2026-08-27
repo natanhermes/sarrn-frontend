@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 
 import { PostsCatalog } from "@/components/public/posts-catalog";
 import {
+  resolveCatalogDate,
   resolveCatalogPage,
-  resolveCatalogYear,
+  resolveCatalogSearch,
 } from "@/lib/catalog-filters";
 import { getPublicPostsPage } from "@/lib/public-api";
 
@@ -16,7 +17,11 @@ export const metadata: Metadata = {
 const PAGE_SIZE = 9;
 
 type ProjetosPageProps = {
-  searchParams: Promise<{ page?: string; year?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    search?: string;
+    date?: string;
+  }>;
 };
 
 export default async function ProjetosPage({
@@ -24,11 +29,13 @@ export default async function ProjetosPage({
 }: ProjetosPageProps) {
   const params = await searchParams;
   const pageOneBased = resolveCatalogPage(params.page);
-  const year = resolveCatalogYear(params.year);
+  const search = resolveCatalogSearch(params.search);
+  const date = resolveCatalogDate(params.date);
 
   const pageData = await getPublicPostsPage({
     type: "PROJECT",
-    year,
+    search,
+    date,
     page: pageOneBased - 1,
     size: PAGE_SIZE,
   });
@@ -41,7 +48,6 @@ export default async function ProjetosPage({
       emptyMessage="Nenhum projeto encontrado com os filtros selecionados."
       basePath="/projetos"
       pageData={pageData}
-      activeYear={year}
     />
   );
 }

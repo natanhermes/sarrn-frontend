@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 
 import { AgendaCatalog } from "@/components/public/agenda-catalog";
 import type { AgendaView } from "@/components/public/agenda-filter";
-import { resolveCatalogPage } from "@/lib/catalog-filters";
+import {
+  resolveCatalogDate,
+  resolveCatalogPage,
+  resolveCatalogSearch,
+} from "@/lib/catalog-filters";
 import { getPublicEventsPage } from "@/lib/public-api";
 
 export const metadata: Metadata = {
@@ -20,6 +24,8 @@ type AgendaPageProps = {
     year?: string;
     month?: string;
     page?: string;
+    search?: string;
+    date?: string;
   }>;
 };
 
@@ -66,6 +72,8 @@ export default async function AgendaPage({ searchParams }: AgendaPageProps) {
   const params = await searchParams;
   const view = resolveView(params.view, params.scope);
   const pageOneBased = resolveCatalogPage(params.page);
+  const search = resolveCatalogSearch(params.search);
+  const date = resolveCatalogDate(params.date);
   let year = resolveYear(params.year);
   let month = resolveMonth(params.month);
 
@@ -79,6 +87,8 @@ export default async function AgendaPage({ searchParams }: AgendaPageProps) {
     upcoming: view === "upcoming" ? true : undefined,
     year: view === "past" ? year : undefined,
     month: view === "past" ? month : undefined,
+    search,
+    date,
     page: pageOneBased - 1,
     size: PAGE_SIZE,
   });
