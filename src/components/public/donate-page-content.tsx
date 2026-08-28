@@ -102,7 +102,7 @@ export function DonatePageContent({ settings }: DonatePageContentProps) {
   const hasBank = Boolean(bankName || bankAgency || bankAccount || documentCnpj);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 py-12 md:py-24">
+    <div className="min-h-screen bg-slate-50/50 py-20 md:py-24">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 flex flex-col items-center text-center">
         {/* Header section */}
         <div className="flex flex-col gap-2 items-center text-center">

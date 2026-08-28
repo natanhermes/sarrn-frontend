@@ -219,15 +219,14 @@ export function SiteHeader({
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button
-              size="lg"
-              nativeButton={false}
-              className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-3.5 py-2 text-sm font-bold text-white shadow-md transition-all duration-300 hover:scale-105 hover:bg-orange-600 active:scale-95 md:px-5 md:py-2.5"
-              render={<Link href="/doar" />}
+            <Link
+              href="/doar"
+              className="hidden sm:flex items-center gap-2.5 rounded-full bg-orange-500 px-5 py-2 text-sm font-bold text-white shadow-xl transition-all duration-300 hover:scale-105 hover:bg-orange-600 hover:shadow-2xl active:scale-95 sm:text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+              aria-label="Doe Agora para o SAR"
             >
               <HeartHandshake className="size-5 shrink-0 text-white" />
-              <span className="hidden md:inline">Doe Agora</span>
-            </Button>
+              <span>Doe Agora</span>
+            </Link>
             <Button
               size="icon-lg"
               variant="ghost"
