@@ -79,11 +79,12 @@ export function FunderForm({
           name="logoUrl"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel>Logo</FieldLabel>
+              <FieldLabel>Logo (opcional)</FieldLabel>
               <CoverImageUpload
                 value={field.value}
                 onChange={field.onChange}
                 disabled={isSubmitting}
+                emptyLabel="Nenhuma logo enviada"
                 storagePath={`apoiadores/${currentStorageId}/logo`}
               />
               <FieldDescription>

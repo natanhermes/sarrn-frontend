@@ -35,7 +35,7 @@ export const funderSchema = z
 
 export const funderFormSchema = z.object({
   storageId: z.string().optional(),
-  logoUrl: z.string().min(1, "Envie a logo do apoiador"),
+  logoUrl: z.string().optional(),
   name: z.string().min(1, "Informe o nome"),
   cnpj: z.string().optional(),
   siteUrl: z.string().optional(),
@@ -111,7 +111,7 @@ function optionalOrNull(value?: string | null) {
 export function toFunderSubmitPayload(values: FunderFormValues) {
   return {
     storageId: values.storageId || undefined,
-    logoUrl: values.logoUrl.trim(),
+    logoUrl: optionalOrNull(values.logoUrl),
     name: values.name.trim(),
     cnpj: optionalOrNull(values.cnpj),
     siteUrl: optionalOrNull(values.siteUrl),
