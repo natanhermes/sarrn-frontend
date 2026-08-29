@@ -20,22 +20,8 @@ export const metadata: Metadata = {
   title: "SAR — Serviço de Assistência Rural e Urbano",
   description:
     "Portal institucional do SAR: projetos sociais, notícias e transparência.",
-  icons: {
-    icon: [
-      {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
-    ],
-    apple: "/apple-icon.png",
+  appleWebApp: {
+    title: "SAR-RN",
   },
 };
 
@@ -53,6 +39,9 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${plusJakarta.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <meta name="apple-mobile-web-app-title" content="SAR-RN" />
+      </head>
       <body className="flex min-h-full flex-col">
         {children}
         <Toaster richColors closeButton position="top-right" />
