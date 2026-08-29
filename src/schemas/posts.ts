@@ -119,7 +119,6 @@ export const postSchema = z
   .transform((post) => {
     const authorId =
       post.authorId || post.author_id || post.author?.id || "";
-    const coAuthors = post.coAuthors ?? post.co_authors ?? [];
     const storageId = post.storageId || post.storage_id || undefined;
 
     const rawFunderIds =
@@ -159,6 +158,45 @@ export const postSchema = z
       ];
     }
 
+    const rawAuthorName = (
+      post.authorName ||
+      post.author?.name ||
+      ""
+    ).trim();
+
+    const isDevAuthor =
+      rawAuthorName.toLowerCase() === "desenvolvedor";
+
+    const authorName = isDevAuthor ? "" : rawAuthorName;
+
+    const author = post.author
+      ? {
+          id: post.author.id,
+          name:
+            post.author.name?.trim().toLowerCase() === "desenvolvedor"
+              ? ""
+              : post.author.name.trim(),
+          email: post.author.email,
+        }
+      : authorId
+        ? {
+            id: authorId,
+            name: authorName,
+            email: "",
+          }
+        : null;
+
+    const coAuthors = (post.coAuthors ?? post.co_authors ?? [])
+      .filter(
+        (coAuthor) =>
+          coAuthor.name?.trim().toLowerCase() !== "desenvolvedor",
+      )
+      .map((coAuthor) => ({
+        id: coAuthor.id,
+        name: coAuthor.name.trim(),
+        email: coAuthor.email,
+      }));
+
     return {
       id: post.id,
       storageId,
@@ -174,26 +212,10 @@ export const postSchema = z
       projectDetails: post.projectDetails ?? post.project_details ?? null,
       funderIds,
       funders,
-      author: post.author
-        ? {
-            id: post.author.id,
-            name: post.author.name,
-            email: post.author.email,
-          }
-        : authorId
-          ? {
-              id: authorId,
-              name: post.authorName || "—",
-              email: "",
-            }
-          : null,
-      coAuthors: coAuthors.map((author) => ({
-        id: author.id,
-        name: author.name,
-        email: author.email,
-      })),
+      author,
+      coAuthors,
       authorId,
-      authorName: post.authorName || post.author?.name || "—",
+      authorName,
       createdAt: post.createdAt || post.created_at || null,
       publishedAt: post.publishedAt || post.published_at || null,
       updatedAt: post.updatedAt || post.updated_at || null,
@@ -221,13 +243,12 @@ export const postsListResponseSchema = z.union([
 export const postFormSchema = z
   .object({
     storageId: z.string().optional(),
+    authorId: z.string().optional().nullable(),
     type: postTypeSchema,
     title: z.string().min(1, "Informe o título"),
     summary: z.string().optional(),
     coverImageUrl: z.string().optional(),
-    blocks: z
-      .array(contentBlockFormSchema)
-      .min(1, "A publicação deve conter pelo menos um bloco de conteúdo."),
+    blocks: z.array(contentBlockFormSchema),
     status: postStatusSchema,
     manualPublishedAt: z.boolean(),
     publishedAt: z.string().optional(),
@@ -380,9 +401,11 @@ export function parsePost(payload: unknown): AdminPost {
 export function toPostSubmitPayload(values: PostFormValues) {
   const coAuthorIds = (values.coAuthorIds ?? []).filter(Boolean);
   const funderIds = (values.funderIds ?? []).filter(Boolean);
+  const authorId = values.authorId?.trim() ? values.authorId.trim() : null;
 
   const base = {
     storageId: values.storageId || undefined,
+    authorId,
     type: values.type,
     title: values.title,
     summary: values.summary?.trim() || undefined,

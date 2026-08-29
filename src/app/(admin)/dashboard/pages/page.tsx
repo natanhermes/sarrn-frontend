@@ -137,7 +137,11 @@ export default function InstitutionalPagesPage() {
             <TableBody>
               {pages.map((page) => (
                 <TableRow key={page.id}>
-                  <TableCell className="font-medium">{page.title}</TableCell>
+                  <TableCell className="max-w-xs font-medium lg:max-w-md">
+                    <span className="line-clamp-2" title={page.title}>
+                      {page.title}
+                    </span>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {page.slug}
                   </TableCell>

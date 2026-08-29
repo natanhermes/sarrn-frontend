@@ -60,10 +60,12 @@ export function ViewPostDialog({
               >
                 {postStatusLabels[post.status]}
               </Badge>
-              <p className="text-sm text-muted-foreground">
-                Autor:{" "}
-                <span className="text-foreground">{post.authorName}</span>
-              </p>
+              {post.authorName ? (
+                <p className="text-sm text-muted-foreground">
+                  Autor:{" "}
+                  <span className="text-foreground">{post.authorName}</span>
+                </p>
+              ) : null}
               {post.coAuthors.length > 0 ? (
                 <p className="text-sm text-muted-foreground">
                   Co-autores:{" "}

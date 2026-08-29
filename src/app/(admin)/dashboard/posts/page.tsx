@@ -247,11 +247,11 @@ function PostsPageContent() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Título</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Autor</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="w-28">Tipo</TableHead>
+                  <TableHead className="w-28">Status</TableHead>
+                  <TableHead className="w-40">Autor</TableHead>
+                  <TableHead className="w-40">Data</TableHead>
+                  <TableHead className="w-28 text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -271,8 +271,10 @@ function PostsPageContent() {
 
                     return (
                       <TableRow key={post.id}>
-                        <TableCell className="font-medium">
-                          {post.title}
+                        <TableCell className="max-w-xs font-medium lg:max-w-md">
+                          <span className="line-clamp-2" title={post.title}>
+                            {post.title}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary">
@@ -290,7 +292,12 @@ function PostsPageContent() {
                             {postStatusLabels[post.status]}
                           </Badge>
                         </TableCell>
-                        <TableCell>{post.authorName}</TableCell>
+                        <TableCell
+                          className="max-w-[140px] truncate text-muted-foreground"
+                          title={post.authorName}
+                        >
+                          {post.authorName}
+                        </TableCell>
                         <TableCell className="whitespace-nowrap text-muted-foreground">
                           {formatDateTimeBR(post.publishedAt || post.createdAt)}
                         </TableCell>

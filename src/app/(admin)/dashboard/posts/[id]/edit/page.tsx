@@ -98,6 +98,7 @@ export default function EditPostPage() {
         isEditing
         defaultValues={{
           storageId: postQuery.data.storageId,
+          authorId: postQuery.data.authorId || postQuery.data.author?.id || "",
           type: postQuery.data.type,
           title: postQuery.data.title,
           summary: postQuery.data.summary,

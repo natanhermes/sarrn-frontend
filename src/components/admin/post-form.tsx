@@ -7,6 +7,7 @@ import { useEffect, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 
+import { AuthorSelect } from "@/components/admin/author-select";
 import { CoAuthorsSelect } from "@/components/admin/co-authors-select";
 import { ContentBlocksField } from "@/components/admin/content-blocks-field";
 import { CoverImageUpload } from "@/components/admin/cover-image-upload";
@@ -84,6 +85,7 @@ export function PostForm({
     resolver: zodResolver(postFormSchema),
     defaultValues: {
       storageId: initialStorageId,
+      authorId: defaultValues?.authorId ?? "",
       type: initialType,
       title: defaultValues?.title ?? "",
       summary: defaultValues?.summary ?? "",
@@ -108,10 +110,10 @@ export function PostForm({
     },
   });
 
-  const [selectedType, publicationStatus, manualPublishedAt, watchStorageId] =
+  const [selectedType, publicationStatus, manualPublishedAt, watchStorageId, watchAuthorId] =
     useWatch({
       control: form.control,
-      name: ["type", "status", "manualPublishedAt", "storageId"],
+      name: ["type", "status", "manualPublishedAt", "storageId", "authorId"],
     });
 
   const currentStorageId = watchStorageId || initialStorageId;
@@ -159,11 +161,12 @@ export function PostForm({
 
   async function handleSubmit(values: PostFormValues) {
     const currentUser = useAuth.getState().user ?? getAuthUser();
+    const effectiveAuthorId = values.authorId || currentUser?.id;
     const sanitized: PostFormValues = {
       ...values,
       status: resolvePostStatusForSubmit(currentUser, values.status),
       coAuthorIds: (values.coAuthorIds ?? []).filter(
-        (id) => id !== currentUser?.id,
+        (id) => id !== effectiveAuthorId,
       ),
     };
 
@@ -188,12 +191,12 @@ export function PostForm({
                 ? postTypeSelectItems
                 : field.value && field.value in postTypeLabels
                   ? [
-                      ...postTypeSelectItems,
-                      {
-                        value: field.value as PostType,
-                        label: postTypeLabels[field.value as PostType],
-                      },
-                    ]
+                    ...postTypeSelectItems,
+                    {
+                      value: field.value as PostType,
+                      label: postTypeLabels[field.value as PostType],
+                    },
+                  ]
                   : postTypeSelectItems;
 
               return (
@@ -271,6 +274,27 @@ export function PostForm({
                     Contribuidor só pode salvar publicações como rascunho.
                   </FieldDescription>
                 ) : null}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="authorId"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Autor principal</FieldLabel>
+                <AuthorSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={isSubmitting}
+                />
+                <FieldDescription>
+                  Padrão: atribuir a você.
+                </FieldDescription>
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
@@ -575,12 +599,12 @@ export function PostForm({
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel>Co-autores</FieldLabel>
               <FieldDescription>
-                Opcional. O usuário logado permanece como autor principal.
+                Opcional. Selecione outros colaboradores da publicação.
               </FieldDescription>
               <CoAuthorsSelect
                 value={field.value}
                 onChange={field.onChange}
-                excludeUserId={sessionUser?.id}
+                excludeUserId={watchAuthorId || sessionUser?.id}
                 disabled={isSubmitting}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
