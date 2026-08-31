@@ -6,11 +6,13 @@ import {
   Loader2Icon,
   PencilIcon,
   PlusIcon,
+  Search,
   Trash2Icon,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { ViewPostDialog } from "@/components/admin/view-post-dialog";
@@ -26,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Pagination,
   PaginationContent,
@@ -41,6 +44,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDebounce } from "@/hooks/use-debounce";
 import api from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateTimeBR } from "@/lib/format";
@@ -91,14 +95,100 @@ function PostsPageContent() {
   const parsedType = postTypeSchema.safeParse(typeParam);
   const selectedType = parsedType.success ? parsedType.data : undefined;
 
+  const searchParamQ =
+    searchParams.get("q") ?? searchParams.get("search") ?? "";
+  const [prevSearchParam, setPrevSearchParam] = useState(searchParamQ);
+  const [searchTerm, setSearchTerm] = useState(searchParamQ);
+
+  if (prevSearchParam !== searchParamQ) {
+    setPrevSearchParam(searchParamQ);
+    setSearchTerm(searchParamQ);
+  }
+
+  const debouncedSearch = useDebounce(searchTerm, 500);
+
   const pageParam = Number(searchParams.get("page") ?? "0");
   const page = Number.isFinite(pageParam) && pageParam >= 0 ? pageParam : 0;
   const sizeParam = Number(searchParams.get("size") ?? String(DEFAULT_PAGE_SIZE));
   const size =
     Number.isFinite(sizeParam) && sizeParam > 0 ? sizeParam : DEFAULT_PAGE_SIZE;
 
+  const updateParams = useCallback(
+    (updates: {
+      type?: PostType | null;
+      page?: number;
+      size?: number;
+      q?: string | null;
+    }) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if ("type" in updates) {
+        if (updates.type) {
+          params.set("type", updates.type);
+        } else {
+          params.delete("type");
+        }
+        params.set("page", "0");
+      }
+
+      if ("q" in updates) {
+        if (updates.q?.trim()) {
+          params.set("q", updates.q.trim());
+        } else {
+          params.delete("q");
+        }
+        params.delete("search");
+        params.set("page", "0");
+      }
+
+      if (typeof updates.page === "number") {
+        params.set("page", String(updates.page));
+      }
+
+      if (typeof updates.size === "number") {
+        params.set("size", String(updates.size));
+      }
+
+      if (params.get("page") === "0") {
+        params.delete("page");
+      }
+
+      if (params.get("size") === String(DEFAULT_PAGE_SIZE)) {
+        params.delete("size");
+      }
+
+      const query = params.toString();
+      const href = query ? `/dashboard/posts?${query}` : "/dashboard/posts";
+      if ("q" in updates) {
+        router.replace(href, { scroll: false });
+      } else {
+        router.push(href);
+      }
+    },
+    [router, searchParams],
+  );
+
+  // Atualiza search params na URL com debounce e reseta paginação para 1 (page 0)
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      if (searchParamQ.trim()) {
+        updateParams({ q: null });
+      }
+      return;
+    }
+
+    if (debouncedSearch.trim() !== searchParamQ.trim()) {
+      updateParams({ q: debouncedSearch });
+    }
+  }, [debouncedSearch, searchTerm, searchParamQ, updateParams]);
+
+  const handleClear = () => {
+    setSearchTerm("");
+    updateParams({ q: null });
+  };
+
   const postsQuery = useQuery({
-    queryKey: ["admin-posts", selectedType ?? "ALL", page, size],
+    queryKey: ["admin-posts", selectedType ?? "ALL", searchParamQ, page, size],
     queryFn: async () => {
       const { data } = await api.get("/admin/posts", {
         params: {
@@ -106,6 +196,9 @@ function PostsPageContent() {
           size,
           sort: "createdAt,desc",
           ...(selectedType ? { type: selectedType } : {}),
+          ...(searchParamQ.trim()
+            ? { search: searchParamQ.trim(), q: searchParamQ.trim() }
+            : {}),
         },
       });
       return parsePostsPage(data);
@@ -136,42 +229,6 @@ function PostsPageContent() {
       );
     },
   });
-
-  function updateParams(updates: {
-    type?: PostType | null;
-    page?: number;
-    size?: number;
-  }) {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if ("type" in updates) {
-      if (updates.type) {
-        params.set("type", updates.type);
-      } else {
-        params.delete("type");
-      }
-      params.set("page", "0");
-    }
-
-    if (typeof updates.page === "number") {
-      params.set("page", String(updates.page));
-    }
-
-    if (typeof updates.size === "number") {
-      params.set("size", String(updates.size));
-    }
-
-    if (params.get("page") === "0") {
-      params.delete("page");
-    }
-
-    if (params.get("size") === String(DEFAULT_PAGE_SIZE)) {
-      params.delete("size");
-    }
-
-    const query = params.toString();
-    router.push(query ? `/dashboard/posts?${query}` : "/dashboard/posts");
-  }
 
   const pageTitle = selectedType
     ? pageTitleByType[selectedType]
@@ -205,6 +262,30 @@ function PostsPageContent() {
             Nova publicação
           </Button>
         </Link>
+      </div>
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Search Input Bar */}
+        <div className="relative w-full max-w-md">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar por título, resumo ou objetivo, conteúdo..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
+          />
+          {searchTerm ? (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <X className="size-4" />
+              <span className="sr-only">Limpar busca</span>
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -261,7 +342,9 @@ function PostsPageContent() {
                       colSpan={6}
                       className="py-10 text-center text-muted-foreground"
                     >
-                      Nenhuma publicação encontrada.
+                      {searchParamQ
+                        ? `Nenhuma publicação encontrada para "${searchParamQ}".`
+                        : "Nenhuma publicação encontrada."}
                     </TableCell>
                   </TableRow>
                 ) : (

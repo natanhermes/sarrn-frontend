@@ -11,6 +11,68 @@ type BlockRendererProps = {
   title?: string;
 };
 
+export function getYouTubeEmbedUrl(url?: string | null): string | null {
+  if (!url?.trim()) {
+    return null;
+  }
+
+  const trimmed = url.trim();
+
+  if (
+    trimmed.startsWith("https://www.youtube.com/embed/") ||
+    trimmed.startsWith("https://youtube.com/embed/") ||
+    trimmed.startsWith("http://www.youtube.com/embed/") ||
+    trimmed.startsWith("http://youtube.com/embed/") ||
+    trimmed.startsWith("//www.youtube.com/embed/")
+  ) {
+    return trimmed.startsWith("//") ? `https:${trimmed}` : trimmed;
+  }
+
+  try {
+    const parsedUrl = new URL(
+      trimmed.startsWith("http://") || trimmed.startsWith("https://")
+        ? trimmed
+        : `https://${trimmed}`,
+    );
+
+    const hostname = parsedUrl.hostname.toLowerCase();
+    let videoId: string | null = null;
+
+    if (hostname === "youtu.be" || hostname.endsWith(".youtu.be")) {
+      videoId = parsedUrl.pathname.replace(/^\//, "").split("/")[0] || null;
+    } else if (
+      hostname === "youtube.com" ||
+      hostname.endsWith(".youtube.com")
+    ) {
+      if (parsedUrl.pathname.startsWith("/watch")) {
+        videoId = parsedUrl.searchParams.get("v");
+      } else if (parsedUrl.pathname.startsWith("/shorts/")) {
+        videoId = parsedUrl.pathname.replace("/shorts/", "").split("/")[0] || null;
+      } else if (parsedUrl.pathname.startsWith("/embed/")) {
+        videoId = parsedUrl.pathname.replace("/embed/", "").split("/")[0] || null;
+      } else if (parsedUrl.pathname.startsWith("/v/")) {
+        videoId = parsedUrl.pathname.replace("/v/", "").split("/")[0] || null;
+      }
+    }
+
+    if (videoId) {
+      const cleanVideoId = videoId.replace(/[^a-zA-Z0-9_-]/g, "");
+      if (cleanVideoId) {
+        return `https://www.youtube.com/embed/${cleanVideoId}`;
+      }
+    }
+  } catch {
+    const match = trimmed.match(
+      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/,
+    );
+    if (match && match[1]) {
+      return `https://www.youtube.com/embed/${match[1]}`;
+    }
+  }
+
+  return null;
+}
+
 export function BlockRenderer({
   blocks,
   title = "Conteúdo",
@@ -102,6 +164,29 @@ export function BlockRenderer({
                 className="mt-4 hidden h-[600px] w-full rounded-lg border border-border md:block"
               />
             </article>
+          );
+        }
+
+        if (block.type === "VIDEO") {
+          const embedUrl = getYouTubeEmbedUrl(block.videoUrl);
+
+          if (!embedUrl) {
+            return null;
+          }
+
+          return (
+            <div
+              key={block.id ?? `video-${block.displayOrder}`}
+              className="my-4 w-full overflow-hidden rounded-2xl border border-border bg-black shadow-sm"
+            >
+              <iframe
+                src={embedUrl}
+                title={title ? `Vídeo: ${title}` : "Vídeo do YouTube"}
+                className="w-full aspect-video border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
           );
         }
 

@@ -51,7 +51,10 @@ type SiteHeaderProps = {
 };
 
 const navTriggerClassName =
-  "h-auto rounded-md bg-transparent px-3 py-2 text-sm font-medium text-white/90 hover:bg-transparent hover:text-white/90 focus:bg-transparent focus:text-white/90 data-popup-open:bg-transparent data-popup-open:text-white/90 data-popup-open:hover:bg-transparent data-open:bg-transparent data-open:text-white/90 data-open:hover:bg-transparent data-open:focus:bg-transparent";
+  "h-auto rounded-md bg-transparent px-2 xl:px-3 py-2 text-[13px] xl:text-sm font-medium text-white/90 hover:bg-transparent hover:text-white/90 focus:bg-transparent focus:text-white/90 data-popup-open:bg-transparent data-popup-open:text-white/90 data-popup-open:hover:bg-transparent data-open:bg-transparent data-open:text-white/90 data-open:hover:bg-transparent data-open:focus:bg-transparent";
+
+const navLinkClassName =
+  "rounded-md px-2 xl:px-3 py-2 text-[13px] xl:text-sm font-medium text-white/90 transition-colors hover:text-white whitespace-nowrap";
 
 export function SiteHeader({
   menuItems,
@@ -112,16 +115,16 @@ export function SiteHeader({
           solid ? "bg-[#356e7c] py-4 shadow-md" : "bg-transparent py-6",
         )}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 md:px-8">
-          <Link href="/" aria-label="Página inicial do SAR">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link href="/" aria-label="Página inicial do SAR" className="shrink-0">
             <SarrnLogo />
           </Link>
 
-          <nav className="hidden items-center gap-1 lg:flex">
+          <nav className="hidden items-center gap-0.5 xl:gap-1 lg:flex">
             <a
               key={homeLink.href}
               href={homeLink.href}
-              className="rounded-md px-3 py-2 text-sm font-medium text-white/90 transition-colors hover:text-white"
+              className={navLinkClassName}
             >
               {homeLink.label}
             </a>
@@ -166,7 +169,7 @@ export function SiteHeader({
               <a
                 key={link.href}
                 href={link.href}
-                className="rounded-md px-3 py-2 text-sm font-medium text-white/90 transition-colors hover:text-white"
+                className={navLinkClassName}
               >
                 {link.label}
               </a>
@@ -200,7 +203,7 @@ export function SiteHeader({
             <a
               key={agendaLink.href}
               href={agendaLink.href}
-              className="rounded-md px-3 py-2 text-sm font-medium text-white/90 transition-colors hover:text-white"
+              className={navLinkClassName}
             >
               {agendaLink.label}
             </a>
@@ -209,10 +212,10 @@ export function SiteHeader({
           <div className="flex items-center gap-2">
             <Link
               href="/doar"
-              className="hidden sm:flex items-center gap-2.5 rounded-full bg-orange-500 px-5 py-2 text-sm font-bold text-white shadow-xl transition-all duration-300 hover:scale-105 hover:bg-orange-600 hover:shadow-2xl active:scale-95 sm:text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+              className="hidden sm:flex shrink-0 whitespace-nowrap items-center gap-2 rounded-full bg-orange-500 px-4 py-2 xl:px-5 xl:py-2 text-xs font-bold text-white shadow-xl transition-all duration-300 hover:scale-105 hover:bg-orange-600 hover:shadow-2xl active:scale-95 xl:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
               aria-label="Doe Agora para o SAR"
             >
-              <HeartHandshake className="size-5 shrink-0 text-white" />
+              <HeartHandshake className="size-4.5 xl:size-5 shrink-0 text-white" />
               <span>Doe Agora</span>
             </Link>
             <Button

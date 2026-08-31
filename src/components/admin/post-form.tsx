@@ -36,12 +36,14 @@ import {
   resolvePostStatusForSubmit,
 } from "@/lib/post-permissions";
 import {
+  currencySelectItems,
   executionStatusSelectItems,
   postFormSchema,
   postStatusSelectItems,
   postTypeLabels,
   postTypeSelectItems,
   toPostSubmitPayload,
+  type CurrencyType,
   type PostFormValues,
   type PostSubmitPayload,
   type PostType,
@@ -104,6 +106,7 @@ export function PostForm({
         startDate: toDateInputValue(defaultValues?.projectDetails?.startDate),
         endDate: toDateInputValue(defaultValues?.projectDetails?.endDate),
         budgetValue: defaultValues?.projectDetails?.budgetValue ?? undefined,
+        currency: defaultValues?.projectDetails?.currency ?? "BRL",
         executionStatus:
           defaultValues?.projectDetails?.executionStatus ?? "ONGOING",
       },
@@ -489,41 +492,89 @@ export function PostForm({
               />
             </div>
 
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid gap-5 md:grid-cols-3">
               <Controller
-                name="projectDetails.budgetValue"
+                name="projectDetails.currency"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="project-budget">Orçamento</FieldLabel>
-                    <NumericFormat
-                      id="project-budget"
-                      customInput={Input}
-                      thousandSeparator="."
-                      decimalSeparator=","
-                      prefix="R$ "
-                      decimalScale={2}
-                      fixedDecimalScale
-                      allowNegative={false}
-                      value={field.value ?? ""}
-                      onValueChange={(values) => {
-                        field.onChange(
-                          values.floatValue === undefined
-                            ? undefined
-                            : values.floatValue,
-                        );
+                    <FieldLabel>Moeda</FieldLabel>
+                    <Select
+                      items={currencySelectItems}
+                      value={field.value ?? "BRL"}
+                      onValueChange={(value) => {
+                        if (value != null) {
+                          field.onChange(value);
+                        }
                       }}
-                      onBlur={field.onBlur}
-                      getInputRef={field.ref}
-                      placeholder="R$ 0,00"
-                      aria-invalid={fieldState.invalid}
                       disabled={isSubmitting}
-                    />
+                    >
+                      <SelectTrigger
+                        className="w-full"
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <SelectValue placeholder="Selecione a moeda" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {currencySelectItems.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
                   </Field>
                 )}
+              />
+
+              <Controller
+                name="projectDetails.budgetValue"
+                control={form.control}
+                render={({ field, fieldState }) => {
+                  const currentCurrency =
+                    form.watch("projectDetails.currency") || "BRL";
+                  const prefix =
+                    currentCurrency === "EUR"
+                      ? "€ "
+                      : currentCurrency === "USD"
+                        ? "$ "
+                        : "R$ ";
+
+                  return (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="project-budget">Orçamento</FieldLabel>
+                      <NumericFormat
+                        id="project-budget"
+                        customInput={Input}
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        prefix={prefix}
+                        decimalScale={2}
+                        fixedDecimalScale
+                        allowNegative={false}
+                        value={field.value ?? ""}
+                        onValueChange={(values) => {
+                          field.onChange(
+                            values.floatValue === undefined
+                              ? undefined
+                              : values.floatValue,
+                          );
+                        }}
+                        onBlur={field.onBlur}
+                        getInputRef={field.ref}
+                        placeholder={`${prefix}0,00`}
+                        aria-invalid={fieldState.invalid}
+                        disabled={isSubmitting}
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  );
+                }}
               />
 
               <Controller

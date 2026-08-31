@@ -2,7 +2,7 @@
 
 import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 
 import { DatePickerInput } from "@/components/public/date-picker-input";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 
 export type AgendaView = "upcoming" | "past";
@@ -56,62 +57,74 @@ export function AgendaFilter({ view, month }: AgendaFilterProps) {
   const selectedSearch = searchParams.get("search") ?? "";
   const selectedDate = searchParams.get("date") ?? "";
 
+  const [prevSelectedSearch, setPrevSelectedSearch] = useState(selectedSearch);
   const [searchTerm, setSearchTerm] = useState(selectedSearch);
 
-  // Sync state if URL searchParam changes externally
-  useEffect(() => {
+  if (prevSelectedSearch !== selectedSearch) {
+    setPrevSelectedSearch(selectedSearch);
     setSearchTerm(selectedSearch);
-  }, [selectedSearch]);
+  }
+
+  const debouncedSearch = useDebounce(searchTerm, 500);
+
+  const pushParams = useCallback(
+    (next: URLSearchParams) => {
+      next.delete("page");
+      next.delete("scope");
+      next.delete("year");
+      const query = next.toString();
+      const href = query ? `${pathname}?${query}` : pathname;
+
+      startTransition(() => {
+        router.push(href);
+      });
+    },
+    [pathname, router],
+  );
+
+  const updateSearchAndDate = useCallback(
+    (searchVal?: string | null, dateVal?: string | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (searchVal !== undefined) {
+        if (searchVal?.trim()) {
+          params.set("search", searchVal.trim());
+        } else {
+          params.delete("search");
+        }
+      }
+
+      if (dateVal !== undefined) {
+        if (dateVal?.trim()) {
+          params.set("date", dateVal.trim());
+        } else {
+          params.delete("date");
+        }
+      }
+
+      pushParams(params);
+    },
+    [pushParams, searchParams],
+  );
 
   // Debounced search update (500ms)
   useEffect(() => {
-    if (searchTerm === selectedSearch) {
+    if (!searchTerm.trim()) {
+      if (selectedSearch.trim()) {
+        updateSearchAndDate(null, undefined);
+      }
       return;
     }
 
-    const timer = setTimeout(() => {
-      updateSearchAndDate(searchTerm, undefined);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm, selectedSearch]);
-
-  function pushParams(next: URLSearchParams) {
-    next.delete("page");
-    next.delete("scope");
-    next.delete("year");
-    const query = next.toString();
-    const href = query ? `${pathname}?${query}` : pathname;
-
-    startTransition(() => {
-      router.push(href);
-    });
-  }
-
-  function updateSearchAndDate(
-    searchVal?: string | null,
-    dateVal?: string | null,
-  ) {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (searchVal !== undefined) {
-      if (searchVal?.trim()) {
-        params.set("search", searchVal.trim());
-      } else {
-        params.delete("search");
-      }
+    if (debouncedSearch.trim() !== selectedSearch.trim()) {
+      updateSearchAndDate(debouncedSearch, undefined);
     }
+  }, [debouncedSearch, searchTerm, selectedSearch, updateSearchAndDate]);
 
-    if (dateVal !== undefined) {
-      if (dateVal?.trim()) {
-        params.set("date", dateVal.trim());
-      } else {
-        params.delete("date");
-      }
-    }
-
-    pushParams(params);
-  }
+  const handleClear = () => {
+    setSearchTerm("");
+    updateSearchAndDate(null, undefined);
+  };
 
   function setView(nextView: AgendaView) {
     const params = new URLSearchParams(searchParams.toString());
@@ -142,22 +155,19 @@ export function AgendaFilter({ view, month }: AgendaFilterProps) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         {/* Title Search Input (Debounced 500ms) */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Buscar evento por título..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 pr-8"
+            className="pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
           />
           {searchTerm ? (
             <button
               type="button"
-              onClick={() => {
-                setSearchTerm("");
-                updateSearchAndDate(null, undefined);
-              }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              onClick={handleClear}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               <X className="size-4" />
               <span className="sr-only">Limpar busca</span>

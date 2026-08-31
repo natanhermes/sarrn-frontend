@@ -64,15 +64,26 @@ export function formatPixKeyDisplay(value?: string | null, type?: string | null)
   return trimmed;
 }
 
-export function formatCurrencyBRL(value?: number | null) {
+export function formatCurrency(
+  value?: number | null,
+  currency: string = "BRL",
+) {
   if (value === undefined || value === null || Number.isNaN(value)) {
     return "—";
   }
 
+  const validCurrency = ["BRL", "EUR", "USD"].includes(currency?.toUpperCase())
+    ? currency.toUpperCase()
+    : "BRL";
+
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
-    currency: "BRL",
+    currency: validCurrency,
   }).format(value);
+}
+
+export function formatCurrencyBRL(value?: number | null) {
+  return formatCurrency(value, "BRL");
 }
 
 export function formatDateBR(value?: string | null) {

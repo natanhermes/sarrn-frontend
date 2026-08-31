@@ -5,6 +5,7 @@ import {
   ImageIcon,
   TextIcon,
   Trash2Icon,
+  VideoIcon,
 } from "lucide-react";
 import {
   Controller,
@@ -49,6 +50,10 @@ const blockMeta = {
     label: "Bloco de arquivo",
     icon: FileTextIcon,
   },
+  VIDEO: {
+    label: "Bloco de vídeo",
+    icon: VideoIcon,
+  },
 } as const;
 
 export function ContentBlocksField<T extends FormWithBlocks>({
@@ -68,7 +73,7 @@ export function ContentBlocksField<T extends FormWithBlocks>({
       <div>
         <h2 className="text-lg font-semibold tracking-tight">Blocos</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Intercale textos, galerias e arquivos PDF na ordem de exibição
+          Intercale textos, vídeos, galerias e arquivos PDF na ordem de exibição
           desejada.
         </p>
       </div>
@@ -221,6 +226,33 @@ export function ContentBlocksField<T extends FormWithBlocks>({
                       />
                     </div>
                   ) : null}
+
+                  {blockType === "VIDEO" ? (
+                    <Controller
+                      control={control}
+                      name={`${name}.${index}.videoUrl` as Path<T>}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={`block-video-url-${index}`}>
+                            Link do vídeo (YouTube)
+                          </FieldLabel>
+                          <Input
+                            id={`block-video-url-${index}`}
+                            placeholder="Ex.: https://www.youtube.com/watch?v=... ou https://youtu.be/..."
+                            disabled={disabled}
+                            value={(field.value as string) ?? ""}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                          />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
+                    />
+                  ) : null}
                 </div>
               );
             }}
@@ -237,6 +269,15 @@ export function ContentBlocksField<T extends FormWithBlocks>({
         >
           <TextIcon className="size-4" />
           Adicionar Texto
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={disabled}
+          onClick={() => append(emptyContentBlock("VIDEO") as never)}
+        >
+          <VideoIcon className="size-4" />
+          Adicionar Vídeo
         </Button>
         <Button
           type="button"

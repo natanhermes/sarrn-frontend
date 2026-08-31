@@ -2,11 +2,12 @@
 
 import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 
 import { DatePickerInput } from "@/components/public/date-picker-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 import type { PostType } from "@/schemas/posts";
 
@@ -29,68 +30,80 @@ export function PostsFilter({ types = [] }: PostsFilterProps) {
   const selectedSearch = searchParams.get("search") ?? "";
   const selectedDate = searchParams.get("date") ?? "";
 
+  const [prevSelectedSearch, setPrevSelectedSearch] = useState(selectedSearch);
   const [searchTerm, setSearchTerm] = useState(selectedSearch);
 
-  // Sync state if URL searchParam changes externally
-  useEffect(() => {
+  if (prevSelectedSearch !== selectedSearch) {
+    setPrevSelectedSearch(selectedSearch);
     setSearchTerm(selectedSearch);
-  }, [selectedSearch]);
+  }
+
+  const debouncedSearch = useDebounce(searchTerm, 500);
+
+  const updateParams = useCallback(
+    (updates: {
+      type?: string | null;
+      search?: string | null;
+      date?: string | null;
+    }) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if ("type" in updates) {
+        if (updates.type) {
+          params.set("type", updates.type);
+        } else {
+          params.delete("type");
+        }
+      }
+
+      if ("search" in updates) {
+        if (updates.search?.trim()) {
+          params.set("search", updates.search.trim());
+        } else {
+          params.delete("search");
+        }
+      }
+
+      if ("date" in updates) {
+        if (updates.date?.trim()) {
+          params.set("date", updates.date.trim());
+        } else {
+          params.delete("date");
+        }
+      }
+
+      // Removido ano do filtro conforme solicitado
+      params.delete("year");
+      params.delete("page");
+
+      const query = params.toString();
+      const href = query ? `${pathname}?${query}` : pathname;
+
+      startTransition(() => {
+        router.push(href);
+      });
+    },
+    [pathname, router, searchParams],
+  );
 
   // Debounced search update (500ms)
   useEffect(() => {
-    if (searchTerm === selectedSearch) {
+    if (!searchTerm.trim()) {
+      if (selectedSearch.trim()) {
+        updateParams({ search: null });
+      }
       return;
     }
 
-    const timer = setTimeout(() => {
-      updateParams({ search: searchTerm });
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm, selectedSearch]);
-
-  function updateParams(updates: {
-    type?: string | null;
-    search?: string | null;
-    date?: string | null;
-  }) {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if ("type" in updates) {
-      if (updates.type) {
-        params.set("type", updates.type);
-      } else {
-        params.delete("type");
-      }
+    if (debouncedSearch.trim() !== selectedSearch.trim()) {
+      updateParams({ search: debouncedSearch });
     }
+  }, [debouncedSearch, searchTerm, selectedSearch, updateParams]);
 
-    if ("search" in updates) {
-      if (updates.search?.trim()) {
-        params.set("search", updates.search.trim());
-      } else {
-        params.delete("search");
-      }
-    }
-
-    if ("date" in updates) {
-      if (updates.date?.trim()) {
-        params.set("date", updates.date.trim());
-      } else {
-        params.delete("date");
-      }
-    }
-
-    // Removido ano do filtro conforme solicitado
-    params.delete("year");
-    params.delete("page");
-
-    const query = params.toString();
-    const href = query ? `${pathname}?${query}` : pathname;
-
-    startTransition(() => {
-      router.push(href);
-    });
-  }
+  const handleClear = () => {
+    setSearchTerm("");
+    updateParams({ search: null });
+  };
 
   return (
     <div className="space-y-4">
@@ -98,22 +111,19 @@ export function PostsFilter({ types = [] }: PostsFilterProps) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         {/* Title Search Input (Debounced 500ms) */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Buscar por título..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 pr-8"
+            className="pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
           />
           {searchTerm ? (
             <button
               type="button"
-              onClick={() => {
-                setSearchTerm("");
-                updateParams({ search: null });
-              }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              onClick={handleClear}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               <X className="size-4" />
               <span className="sr-only">Limpar busca</span>

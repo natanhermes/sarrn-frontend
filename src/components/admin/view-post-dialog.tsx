@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  formatCurrencyBRL,
+  formatCurrency,
   formatDateBR,
   formatDateTimeBR,
 } from "@/lib/format";
@@ -165,7 +165,7 @@ export function ViewPostDialog({
                       Orçamento
                     </p>
                     <p className="mt-1 text-sm">
-                      {formatCurrencyBRL(details.budgetValue)}
+                      {formatCurrency(details.budgetValue, details.currency)}
                     </p>
                   </div>
                 </div>

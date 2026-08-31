@@ -3,7 +3,7 @@ import { z } from "zod";
 import { sanitizeRichText } from "@/lib/sanitize-html";
 import { isEmptyRichText } from "@/lib/utils";
 
-export const blockTypeSchema = z.enum(["TEXT", "GALLERY", "FILE"]);
+export const blockTypeSchema = z.enum(["TEXT", "GALLERY", "FILE", "VIDEO"]);
 
 export type BlockType = z.infer<typeof blockTypeSchema>;
 
@@ -33,6 +33,8 @@ export const contentBlockSchema = z
     file_url: optionalTextSchema.optional(),
     fileTitle: optionalTextSchema.optional(),
     file_title: optionalTextSchema.optional(),
+    videoUrl: optionalTextSchema.optional(),
+    video_url: optionalTextSchema.optional(),
     displayOrder: z.coerce.number().nullish(),
     display_order: z.coerce.number().nullish(),
   })
@@ -46,6 +48,7 @@ export const contentBlockSchema = z
       : (block.gallery_urls ?? []),
     fileUrl: block.fileUrl || block.file_url || "",
     fileTitle: block.fileTitle || block.file_title || "",
+    videoUrl: block.videoUrl || block.video_url || "",
     displayOrder: block.displayOrder ?? block.display_order ?? 0,
   }));
 
@@ -56,6 +59,7 @@ export const contentBlockFormSchema = z
     galleryUrls: z.array(z.string()).optional(),
     fileUrl: z.string().optional(),
     fileTitle: z.string().optional(),
+    videoUrl: z.string().optional(),
   })
   .superRefine((block, ctx) => {
     if (block.type === "TEXT" && !block.content?.trim()) {
@@ -84,6 +88,14 @@ export const contentBlockFormSchema = z
         message: "Envie o arquivo PDF",
       });
     }
+
+    if (block.type === "VIDEO" && !block.videoUrl?.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["videoUrl"],
+        message: "Informe o link do vídeo",
+      });
+    }
   });
 
 export type ContentBlock = z.infer<typeof contentBlockSchema>;
@@ -100,6 +112,9 @@ export function toBlocksSubmitPayload(blocks: ContentBlockFormValues[]) {
     if (block.type === "FILE") {
       return Boolean(block.fileUrl && block.fileUrl.trim());
     }
+    if (block.type === "VIDEO") {
+      return Boolean(block.videoUrl && block.videoUrl.trim());
+    }
     return false;
   });
 
@@ -111,6 +126,7 @@ export function toBlocksSubmitPayload(blocks: ContentBlockFormValues[]) {
         galleryUrls: null,
         fileUrl: null,
         fileTitle: null,
+        videoUrl: null,
         displayOrder: index,
       };
     }
@@ -124,16 +140,30 @@ export function toBlocksSubmitPayload(blocks: ContentBlockFormValues[]) {
           .filter(Boolean),
         fileUrl: null,
         fileTitle: null,
+        videoUrl: null,
+        displayOrder: index,
+      };
+    }
+
+    if (block.type === "FILE") {
+      return {
+        type: "FILE" as const,
+        content: null,
+        galleryUrls: null,
+        fileUrl: block.fileUrl?.trim() || null,
+        fileTitle: block.fileTitle?.trim() || null,
+        videoUrl: null,
         displayOrder: index,
       };
     }
 
     return {
-      type: "FILE" as const,
+      type: "VIDEO" as const,
       content: null,
       galleryUrls: null,
-      fileUrl: block.fileUrl?.trim() || null,
-      fileTitle: block.fileTitle?.trim() || null,
+      fileUrl: null,
+      fileTitle: null,
+      videoUrl: block.videoUrl?.trim() || null,
       displayOrder: index,
     };
   });
@@ -143,14 +173,18 @@ export function emptyContentBlock(
   type: BlockType = "TEXT",
 ): ContentBlockFormValues {
   if (type === "GALLERY") {
-    return { type, content: "", galleryUrls: [], fileUrl: "", fileTitle: "" };
+    return { type, content: "", galleryUrls: [], fileUrl: "", fileTitle: "", videoUrl: "" };
   }
 
   if (type === "FILE") {
-    return { type, content: "", galleryUrls: [], fileUrl: "", fileTitle: "" };
+    return { type, content: "", galleryUrls: [], fileUrl: "", fileTitle: "", videoUrl: "" };
   }
 
-  return { type: "TEXT", content: "", galleryUrls: [], fileUrl: "", fileTitle: "" };
+  if (type === "VIDEO") {
+    return { type, content: "", galleryUrls: [], fileUrl: "", fileTitle: "", videoUrl: "" };
+  }
+
+  return { type: "TEXT", content: "", galleryUrls: [], fileUrl: "", fileTitle: "", videoUrl: "" };
 }
 
 export function toContentBlockFormValues(
@@ -166,5 +200,6 @@ export function toContentBlockFormValues(
     galleryUrls: block.galleryUrls,
     fileUrl: block.fileUrl,
     fileTitle: block.fileTitle,
+    videoUrl: block.videoUrl || "",
   }));
 }

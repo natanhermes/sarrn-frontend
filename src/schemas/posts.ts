@@ -23,6 +23,9 @@ export const executionStatusSchema = z.enum([
   "ONGOING",
   "COMPLETED",
 ]);
+export const currencySchema = z.enum(["BRL", "EUR", "USD"]);
+
+export type CurrencyType = z.infer<typeof currencySchema>;
 
 export const projectDetailsSchema = z
   .object({
@@ -31,6 +34,7 @@ export const projectDetailsSchema = z
     endDate: z.string().optional().nullable(),
     durationText: z.string().optional().nullable(),
     budgetValue: z.coerce.number().optional().nullable(),
+    currency: currencySchema.optional().nullable().default("BRL"),
     executionStatus: executionStatusSchema.optional().nullable(),
     funderName: z.string().optional().nullable(),
     funder: z
@@ -54,7 +58,11 @@ export const projectDetailsSchema = z
       .optional()
       .nullable(),
   })
-  .passthrough();
+  .passthrough()
+  .transform((details) => ({
+    ...details,
+    currency: details.currency ?? "BRL",
+  }));
 
 export const postAuthorSchema = z
   .object({
@@ -260,6 +268,7 @@ export const postFormSchema = z
         startDate: z.string().optional(),
         endDate: z.string().optional(),
         budgetValue: z.union([z.number(), z.nan()]).optional(),
+        currency: currencySchema.optional(),
         executionStatus: executionStatusSchema.optional(),
       })
       .optional(),
@@ -432,6 +441,7 @@ export function toPostSubmitPayload(values: PostFormValues) {
         ...(startDate ? { startDate } : {}),
         ...(endDate ? { endDate } : {}),
         ...(budgetValue !== undefined ? { budgetValue } : {}),
+        currency: values.projectDetails?.currency ?? "BRL",
         executionStatus:
           values.status === "SCHEDULED"
             ? "PLANNED"
@@ -478,6 +488,12 @@ export const executionStatusLabels: Record<ExecutionStatus, string> = {
   COMPLETED: "Concluído",
 };
 
+export const currencyLabels: Record<CurrencyType, string> = {
+  BRL: "BRL - Real",
+  EUR: "EUR - Euro",
+  USD: "USD - Dólar",
+};
+
 export const postTypeSelectItems = [
   { value: "PROJECT" as const, label: postTypeLabels.PROJECT },
   { value: "NEWS" as const, label: postTypeLabels.NEWS },
@@ -497,4 +513,10 @@ export const executionStatusSelectItems = [
   { value: "PLANNED" as const, label: executionStatusLabels.PLANNED },
   { value: "ONGOING" as const, label: executionStatusLabels.ONGOING },
   { value: "COMPLETED" as const, label: executionStatusLabels.COMPLETED },
+];
+
+export const currencySelectItems = [
+  { value: "BRL" as const, label: currencyLabels.BRL },
+  { value: "EUR" as const, label: currencyLabels.EUR },
+  { value: "USD" as const, label: currencyLabels.USD },
 ];

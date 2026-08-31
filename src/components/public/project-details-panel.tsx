@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import {
-  formatCurrencyBRL,
+  formatCurrency,
   formatDateBR,
 } from "@/lib/format";
 import {
@@ -68,7 +68,7 @@ export function ProjectDetailsPanel({
             Orçamento
           </p>
           <p className="mt-2 text-sm font-medium">
-            {formatCurrencyBRL(details.budgetValue)}
+            {formatCurrency(details.budgetValue, details.currency)}
           </p>
         </div>
 

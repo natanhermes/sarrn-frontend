@@ -115,6 +115,7 @@ export default function EditPostPage() {
                 startDate: postQuery.data.projectDetails.startDate ?? "",
                 endDate: postQuery.data.projectDetails.endDate ?? "",
                 budgetValue: postQuery.data.projectDetails.budgetValue ?? undefined,
+                currency: postQuery.data.projectDetails.currency ?? "BRL",
                 executionStatus:
                   postQuery.data.projectDetails.executionStatus ?? undefined,
               }

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -34,6 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useRequireEditor } from "@/hooks/use-require-editor";
 import api from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -50,18 +51,38 @@ function FundersPageContent() {
 
   const initialSearch =
     searchParams.get("search") ?? searchParams.get("q") ?? "";
+  const [prevSearch, setPrevSearch] = useState(initialSearch);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
 
-  function handleSearchChange(term: string) {
-    setSearchQuery(term);
-    const params = new URLSearchParams(searchParams.toString());
-    if (term.trim()) {
-      params.set("search", term);
-    } else {
-      params.delete("search");
-    }
-    router.replace(`?${params.toString()}`);
+  if (prevSearch !== initialSearch) {
+    setPrevSearch(initialSearch);
+    setSearchQuery(initialSearch);
   }
+
+  const debouncedSearch = useDebounce(searchQuery, 400);
+
+  useEffect(() => {
+    const currentParam =
+      searchParams.get("search") ?? searchParams.get("q") ?? "";
+
+    if (!searchQuery.trim()) {
+      if (currentParam.trim()) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("search");
+        params.delete("q");
+        const query = params.toString();
+        router.replace(query ? `?${query}` : "?", { scroll: false });
+      }
+      return;
+    }
+
+    if (debouncedSearch.trim() !== currentParam.trim()) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("search", debouncedSearch.trim());
+      const query = params.toString();
+      router.replace(query ? `?${query}` : "?", { scroll: false });
+    }
+  }, [debouncedSearch, searchQuery, router, searchParams]);
 
   const fundersQuery = useQuery({
     queryKey: ["admin-funders"],
@@ -149,7 +170,7 @@ function FundersPageContent() {
           type="search"
           placeholder="Buscar por nome ou CNPJ..."
           value={searchQuery}
-          onChange={(e) => handleSearchChange(e.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9"
         />
       </div>
