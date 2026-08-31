@@ -3,7 +3,7 @@
 import { HeartHandshake, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { SarrnLogo } from "@/components/public/sarrn-logo";
 import { Button } from "@/components/ui/button";
@@ -60,7 +60,6 @@ export function SiteHeader({
 }: SiteHeaderProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
-  const sentinelRef = useRef<HTMLDivElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -92,33 +91,22 @@ export function SiteHeader({
       : []);
 
   useEffect(() => {
-    const node = sentinelRef.current;
-    if (!node) {
-      return;
-    }
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 40);
+    };
 
-    const observer = new IntersectionObserver(([entry]) => {
-      setIsScrolled(!entry.isIntersecting);
-    });
-
-    observer.observe(node);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
-      observer.disconnect();
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
   const solid = !isHome || isScrolled;
 
   return (
-    <>
-      <div
-        ref={sentinelRef}
-        className="pointer-events-none absolute top-10 left-0 z-0 h-1 w-full bg-transparent"
-        aria-hidden="true"
-      />
-
-      <header
+    <header
         className={cn(
           "fixed inset-x-0 top-0 z-50 w-full transition-all duration-300",
           solid ? "bg-[#356e7c] py-4 shadow-md" : "bg-transparent py-6",
@@ -330,6 +318,5 @@ export function SiteHeader({
           </div>
         ) : null}
       </header>
-    </>
   );
 }
