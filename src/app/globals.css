@@ -207,3 +207,22 @@
     background-color: var(--brand-green);
   }
 }
+
+/* Quill Rich Text Alignment */
+.ql-align-center,
+.prose .ql-align-center,
+article.prose .ql-align-center {
+  text-align: center;
+}
+
+.ql-align-justify,
+.prose .ql-align-justify,
+article.prose .ql-align-justify {
+  text-align: justify;
+}
+
+.ql-align-right,
+.prose .ql-align-right,
+article.prose .ql-align-right {
+  text-align: right;
+}
