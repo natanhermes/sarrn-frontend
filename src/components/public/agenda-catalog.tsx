@@ -14,24 +14,38 @@ type AgendaCatalogProps = {
   view: AgendaView;
   year?: number;
   month?: number;
+  search?: string;
+  date?: string;
   basePath?: string;
 };
 
 function buildAgendaHref(
   basePath: string,
   pageOneBased: number,
-  filters: { view: AgendaView; year?: number; month?: number },
+  filters: {
+    view: AgendaView;
+    year?: number;
+    month?: number;
+    search?: string;
+    date?: string;
+  },
 ) {
   const params = new URLSearchParams();
 
   if (filters.view === "past") {
     params.set("view", "past");
-    if (filters.year) {
+    if (filters.year && filters.month) {
       params.set("year", String(filters.year));
-    }
-    if (filters.month) {
       params.set("month", String(filters.month));
     }
+  }
+
+  if (filters.search?.trim()) {
+    params.set("search", filters.search.trim());
+  }
+
+  if (filters.date?.trim()) {
+    params.set("date", filters.date.trim());
   }
 
   if (pageOneBased > 1) {
@@ -47,6 +61,8 @@ export function AgendaCatalog({
   view,
   year,
   month,
+  search,
+  date,
   basePath = "/agenda",
 }: AgendaCatalogProps) {
   const [selected, setSelected] = useState<EventSummary | null>(null);
@@ -92,6 +108,8 @@ export function AgendaCatalog({
                     view,
                     year,
                     month,
+                    search,
+                    date,
                   })}
                 />
               }
@@ -117,6 +135,8 @@ export function AgendaCatalog({
                     view,
                     year,
                     month,
+                    search,
+                    date,
                   })}
                 />
               }

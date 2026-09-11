@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2Icon, MapPin } from "lucide-react";
+import { Calendar, Loader2Icon, MapPin } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
@@ -12,7 +12,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { formatDateTimeBR } from "@/lib/format";
+import { formatEventSchedule } from "@/lib/format";
 import {
   getPublicEventBySlug,
   resolvePublicMediaUrl,
@@ -78,6 +78,8 @@ export function EventDetailSheet({
   const startDate = detail?.startDate || event?.startDate || "";
   const endDate = detail?.endDate || event?.endDate || "";
 
+  const scheduleText = formatEventSchedule(startDate, endDate);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -91,11 +93,13 @@ export function EventDetailSheet({
           <SheetDescription className="sr-only">
             Detalhes do evento {title}
           </SheetDescription>
-          <div className="mt-2 flex flex-col gap-1 text-sm text-muted-foreground">
-            <p>
-              {formatDateTimeBR(startDate)}
-              {endDate ? ` — ${formatDateTimeBR(endDate)}` : ""}
-            </p>
+          <div className="mt-2 flex flex-col gap-1.5 text-sm text-muted-foreground">
+            {scheduleText ? (
+              <p className="flex items-center gap-1.5 font-medium text-foreground/80">
+                <Calendar className="size-3.5 shrink-0 text-brand-green" />
+                <span>{scheduleText}</span>
+              </p>
+            ) : null}
             {location ? (
               <p className="flex items-start gap-1.5">
                 <MapPin className="mt-0.5 size-3.5 shrink-0" />
@@ -152,11 +156,7 @@ export function EventDetailSheet({
 
               {detail.blocks.length > 0 ? (
                 <BlockRenderer blocks={detail.blocks} title={detail.title} />
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Este evento ainda não possui conteúdo adicional.
-                </p>
-              )}
+              ) : null}
             </>
           ) : null}
         </div>

@@ -106,6 +106,23 @@ export function formatDateBR(value?: string | null) {
   return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
 }
 
+export function formatTimeBR(value?: string | null) {
+  if (!value?.trim()) {
+    return "";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(parsed);
+}
+
 export function formatDateTimeBR(value?: string | null) {
   if (!value?.trim()) {
     return "—";
@@ -122,7 +139,55 @@ export function formatDateTimeBR(value?: string | null) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    hourCycle: "h23",
   }).format(parsed);
+}
+
+export function formatEventSchedule(
+  startDate?: string | null,
+  endDate?: string | null,
+) {
+  if (!startDate?.trim()) {
+    return null;
+  }
+
+  const startFormatted = formatDateTimeBR(startDate);
+  if (startFormatted === "—") {
+    return null;
+  }
+
+  if (!endDate?.trim()) {
+    return startFormatted;
+  }
+
+  const endFormatted = formatDateTimeBR(endDate);
+  if (endFormatted === "—") {
+    return startFormatted;
+  }
+
+  const startDateObj = new Date(startDate);
+  const endDateObj = new Date(endDate);
+
+  const isSameDay =
+    !Number.isNaN(startDateObj.getTime()) &&
+    !Number.isNaN(endDateObj.getTime()) &&
+    startDateObj.getFullYear() === endDateObj.getFullYear() &&
+    startDateObj.getMonth() === endDateObj.getMonth() &&
+    startDateObj.getDate() === endDateObj.getDate();
+
+  if (isSameDay) {
+    const startTime = formatTimeBR(startDate);
+    const endTime = formatTimeBR(endDate);
+    const datePart = formatDateBR(startDate);
+
+    if (startTime && endTime && startTime !== endTime) {
+      return `${datePart} • ${startTime} às ${endTime}`;
+    }
+
+    return startFormatted;
+  }
+
+  return `${startFormatted} — ${endFormatted}`;
 }
 
 export function toDateInputValue(value?: string | null) {

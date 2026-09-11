@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 export type AgendaView = "upcoming" | "past";
 
 const MONTH_ITEMS = [
+  { value: "all", label: "Todos os anteriores" },
   { value: "1", label: "Janeiro" },
   { value: "2", label: "Fevereiro" },
   { value: "3", label: "Março" },
@@ -34,13 +35,11 @@ const MONTH_ITEMS = [
   { value: "12", label: "Dezembro" },
 ];
 
-function currentMonthParts() {
-  const now = new Date();
-  return {
-    year: now.getFullYear(),
-    month: now.getMonth() + 1,
-  };
-}
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_ITEMS = Array.from({ length: 5 }, (_, i) => {
+  const y = CURRENT_YEAR - i;
+  return { value: String(y), label: String(y) };
+});
 
 type AgendaFilterProps = {
   view: AgendaView;
@@ -48,7 +47,7 @@ type AgendaFilterProps = {
   month?: number;
 };
 
-export function AgendaFilter({ view, month }: AgendaFilterProps) {
+export function AgendaFilter({ view, year, month }: AgendaFilterProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -71,7 +70,6 @@ export function AgendaFilter({ view, month }: AgendaFilterProps) {
     (next: URLSearchParams) => {
       next.delete("page");
       next.delete("scope");
-      next.delete("year");
       const query = next.toString();
       const href = query ? `${pathname}?${query}` : pathname;
 
@@ -132,20 +130,42 @@ export function AgendaFilter({ view, month }: AgendaFilterProps) {
     if (nextView === "upcoming") {
       params.delete("view");
       params.delete("month");
+      params.delete("year");
       pushParams(params);
       return;
     }
 
-    const fallback = currentMonthParts();
     params.set("view", "past");
-    params.set("month", String(month ?? fallback.month));
     pushParams(params);
   }
 
   function setMonth(nextMonth: string) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("view", "past");
-    params.set("month", nextMonth);
+
+    if (nextMonth === "all") {
+      params.delete("month");
+      params.delete("year");
+    } else {
+      params.set("month", nextMonth);
+      if (!params.get("year")) {
+        params.set("year", String(year ?? CURRENT_YEAR));
+      }
+    }
+
+    pushParams(params);
+  }
+
+  function setYear(nextYear: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", "past");
+    params.set("year", nextYear);
+
+    if (!params.get("month") || params.get("month") === "all") {
+      const currentMonth = new Date().getMonth() + 1;
+      params.set("month", String(currentMonth));
+    }
+
     pushParams(params);
   }
 
@@ -216,17 +236,17 @@ export function AgendaFilter({ view, month }: AgendaFilterProps) {
         </div>
 
         {view === "past" ? (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <Select
               items={MONTH_ITEMS}
-              value={month ? String(month) : undefined}
+              value={month ? String(month) : "all"}
               onValueChange={(value) => {
                 if (value != null) {
                   setMonth(value);
                 }
               }}
             >
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-44">
                 <SelectValue placeholder="Mês" />
               </SelectTrigger>
               <SelectContent>
@@ -237,6 +257,29 @@ export function AgendaFilter({ view, month }: AgendaFilterProps) {
                 ))}
               </SelectContent>
             </Select>
+
+            {month ? (
+              <Select
+                items={YEAR_ITEMS}
+                value={String(year ?? CURRENT_YEAR)}
+                onValueChange={(value) => {
+                  if (value != null) {
+                    setYear(value);
+                  }
+                }}
+              >
+                <SelectTrigger className="w-24">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  {YEAR_ITEMS.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : null}
           </div>
         ) : null}
       </div>

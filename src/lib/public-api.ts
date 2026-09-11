@@ -663,13 +663,14 @@ function buildPublicEventsUrl(params: GetPublicEventsParams = {}) {
 
   const url = new URL(`${baseUrl}/public/events`);
 
-  if (params.upcoming === true) {
-    url.searchParams.set("upcoming", "true");
-  }
+  const hasMonthFilter =
+    typeof params.year === "number" && typeof params.month === "number";
 
-  if (typeof params.year === "number" && typeof params.month === "number") {
+  if (hasMonthFilter) {
     url.searchParams.set("year", String(params.year));
     url.searchParams.set("month", String(params.month));
+  } else if (typeof params.upcoming === "boolean") {
+    url.searchParams.set("upcoming", String(params.upcoming));
   }
 
   if (typeof params.page === "number") {
@@ -688,8 +689,6 @@ function buildPublicEventsUrl(params: GetPublicEventsParams = {}) {
   if (params.date?.trim()) {
     url.searchParams.set("date", params.date.trim());
   }
-
-  url.searchParams.set("sort", "startDate,desc");
 
   return url.toString();
 }
@@ -742,11 +741,6 @@ export async function getPublicEventsPage(
 
     const payload: unknown = await response.json();
     const page = parseEventSummariesPage(payload);
-    page.content.sort((a, b) => {
-      const dateA = new Date(a.startDate || 0).getTime();
-      const dateB = new Date(b.startDate || 0).getTime();
-      return dateB - dateA;
-    });
 
     if (params.search?.trim()) {
       const q = params.search.trim().toLowerCase();

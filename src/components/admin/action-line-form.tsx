@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { emptyContentBlock } from "@/schemas/content-blocks";
 import {
   actionLineFormSchema,
   toActionLineSubmitPayload,
@@ -59,7 +58,7 @@ export function ActionLineForm({
       displayOrder: defaultValues?.displayOrder ?? 0,
       blocks: defaultValues?.blocks?.length
         ? defaultValues.blocks
-        : [emptyContentBlock("TEXT")],
+        : [],
     },
   });
 

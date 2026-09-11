@@ -60,33 +60,22 @@ function resolveYear(yearParam?: string) {
   return year;
 }
 
-function currentMonthParts() {
-  const now = new Date();
-  return {
-    year: now.getFullYear(),
-    month: now.getMonth() + 1,
-  };
-}
-
 export default async function AgendaPage({ searchParams }: AgendaPageProps) {
   const params = await searchParams;
   const view = resolveView(params.view, params.scope);
   const pageOneBased = resolveCatalogPage(params.page);
   const search = resolveCatalogSearch(params.search);
   const date = resolveCatalogDate(params.date);
-  let year = resolveYear(params.year);
-  let month = resolveMonth(params.month);
+  const year = resolveYear(params.year);
+  const month = resolveMonth(params.month);
 
-  if (view === "past") {
-    const fallback = currentMonthParts();
-    year = year ?? fallback.year;
-    month = month ?? fallback.month;
-  }
+  const isMonthFilterActive =
+    view === "past" && typeof year === "number" && typeof month === "number";
 
   const pageData = await getPublicEventsPage({
-    upcoming: view === "upcoming" ? true : undefined,
-    year: view === "past" ? year : undefined,
-    month: view === "past" ? month : undefined,
+    upcoming: view === "upcoming" ? true : isMonthFilterActive ? undefined : false,
+    year: isMonthFilterActive ? year : undefined,
+    month: isMonthFilterActive ? month : undefined,
     search,
     date,
     page: pageOneBased - 1,
@@ -114,8 +103,10 @@ export default async function AgendaPage({ searchParams }: AgendaPageProps) {
         <AgendaCatalog
           pageData={pageData}
           view={view}
-          year={year}
-          month={month}
+          year={isMonthFilterActive ? year : undefined}
+          month={isMonthFilterActive ? month : undefined}
+          search={search}
+          date={date}
         />
       </div>
     </main>

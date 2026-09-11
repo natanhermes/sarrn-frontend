@@ -214,7 +214,7 @@ export function emptyInstitutionalPageFormValues(): InstitutionalPageFormValues 
     title: "",
     slug: "",
     menuGroup: "SAR",
-    blocks: [emptyContentBlock("TEXT")],
+    blocks: [],
   };
 }
 

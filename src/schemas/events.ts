@@ -263,7 +263,7 @@ export function emptyEventFormValues(): EventFormValues {
     coverImageUrl: "",
     summary: "",
     isPublished: false,
-    blocks: [emptyContentBlock("TEXT")],
+    blocks: [],
   };
 }
 

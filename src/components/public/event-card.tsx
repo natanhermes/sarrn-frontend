@@ -1,7 +1,7 @@
-import { MapPin } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import Image from "next/image";
 
-import { getCalendarBadgeParts } from "@/lib/format";
+import { formatEventSchedule, getCalendarBadgeParts } from "@/lib/format";
 import { resolvePublicMediaUrl } from "@/lib/public-api";
 import { cn } from "@/lib/utils";
 import type { EventSummary } from "@/schemas/events";
@@ -14,6 +14,7 @@ type EventCardProps = {
 export function EventCard({ event, onSelect }: EventCardProps) {
   const badge = getCalendarBadgeParts(event.startDate);
   const coverSrc = resolvePublicMediaUrl(event.coverImageUrl);
+  const scheduleDisplay = formatEventSchedule(event.startDate, event.endDate);
 
   return (
     <button
@@ -40,12 +41,21 @@ export function EventCard({ event, onSelect }: EventCardProps) {
           {event.title}
         </h3>
 
-        {event.location ? (
-          <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
-            <MapPin className="mt-0.5 size-3.5 shrink-0" />
-            <span className="line-clamp-1">{event.location}</span>
-          </p>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          {scheduleDisplay ? (
+            <span className="inline-flex items-center gap-1.5 font-medium text-foreground/80">
+              <Clock className="size-3.5 shrink-0 text-brand-green" />
+              <span>{scheduleDisplay}</span>
+            </span>
+          ) : null}
+
+          {event.location ? (
+            <span className="inline-flex items-center gap-1.5">
+              <MapPin className="size-3.5 shrink-0" />
+              <span className="line-clamp-1">{event.location}</span>
+            </span>
+          ) : null}
+        </div>
 
         {event.summary ? (
           <p className="line-clamp-2 text-sm leading-relaxed text-pretty text-muted-foreground">
