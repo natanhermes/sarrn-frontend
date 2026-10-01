@@ -1,129 +1,175 @@
-import { MapPin, Phone } from "lucide-react";
+import { Clock, ExternalLink, MapPin, Phone } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import type { PublicSiteSettings } from "@/lib/public-api";
 
-type WhereWeAreSectionProps = {
-  settings: PublicSiteSettings | null;
-};
+const DEFAULT_ADDRESS =
+  "Av. Mal. Floriano Peixoto, 674 - Tirol, Natal - RN, 59020-500";
+const DEFAULT_OPENING_HOURS = "Segunda a Sexta: 09:00–12:00, 13:30–17:00";
 
-const WHATSAPP_MESSAGE =
-  "Olá, sejam vindos(as)! Em que podemos ajudar?";
-
-function digitsOnly(value: string) {
-  return value.replace(/\D/g, "");
-}
-
-function toTelHref(phone: string) {
-  const digits = digitsOnly(phone);
-  return digits ? `tel:${digits}` : null;
-}
-
-function toWhatsAppHref(whatsapp: string) {
-  const digits = digitsOnly(whatsapp);
-  if (!digits) {
-    return null;
+function formatPhoneDisplay(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 11) {
+    return digits.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
   }
-
-  const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
-  const text = encodeURIComponent(WHATSAPP_MESSAGE);
-  return `https://wa.me/${withCountry}?text=${text}`;
-}
-
-function WhatsAppIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-      className={className}
-    >
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.85 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-    </svg>
-  );
-}
-
-export function WhereWeAreSection({ settings }: WhereWeAreSectionProps) {
-  const locationText = settings?.locationText?.trim() || "";
-  const phoneHref = settings?.phoneNumber?.trim()
-    ? toTelHref(settings.phoneNumber)
-    : null;
-  const whatsappHref = settings?.whatsappNumber?.trim()
-    ? toWhatsAppHref(settings.whatsappNumber)
-    : null;
-  const mapsUrl = settings?.googleMapsUrl?.trim() || null;
-
-  if (!locationText && !phoneHref && !whatsappHref && !mapsUrl) {
-    return null;
+  if (digits.length === 10) {
+    return digits.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
   }
+  return phone.trim();
+}
+
+export interface WhereWeAreSectionProps {
+  settings?: PublicSiteSettings | null;
+  address?: string;
+  phone?: string;
+  openingHours?: string;
+  mapsUrl?: string;
+}
+
+export function WhereWeAreSection({
+  settings,
+  address,
+  phone,
+  openingHours = DEFAULT_OPENING_HOURS,
+  mapsUrl,
+}: WhereWeAreSectionProps) {
+  const resolvedAddress =
+    address?.trim() ||
+    settings?.locationText?.trim() ||
+    DEFAULT_ADDRESS;
+
+  const resolvedPhone =
+    phone?.trim() ||
+    settings?.phoneNumber?.trim() ||
+    "";
+
+  const rawPhoneDigits = resolvedPhone.replace(/\D/g, "");
+  const telHref = rawPhoneDigits ? `tel:${rawPhoneDigits}` : null;
+  const displayPhone = resolvedPhone ? formatPhoneDisplay(resolvedPhone) : "";
+
+  const encodedAddress = encodeURIComponent(resolvedAddress);
+
+  const mapsLink =
+    mapsUrl?.trim() ||
+    settings?.googleMapsUrl?.trim() ||
+    `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+
+  const mapEmbedUrl = `https://maps.google.com/maps?q=${encodedAddress}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
 
   return (
-    <section
-      id="onde-estamos"
-      className="w-full bg-brand-red py-16 text-white"
-    >
-      <div className="mx-auto flex max-w-3xl flex-col items-center px-5 text-center md:px-8">
-        <MapPin className="size-10 text-white" aria-hidden />
-        <h2 className="mt-4 mb-6 inline-block rounded-full bg-red-400/50 px-6 py-2 text-xl font-bold text-white md:text-2xl">
-          Onde estamos?
-        </h2>
+    <section id="onde-estamos" className="w-full bg-slate-100 py-16 px-4 md:px-8">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        {/* Card de Informações (Coluna Esquerda) */}
+        <div className="lg:col-span-5 bg-white rounded-2xl p-8 shadow-sm border border-slate-200/80 flex flex-col justify-between space-y-6">
+          <div className="space-y-6">
+            {/* Cabeçalho */}
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-green">
+                Localização & Contato
+              </span>
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mt-1">
+                Venha nos fazer uma visita
+              </h2>
+              <p className="text-sm text-slate-500 mt-1">
+                Estamos de portas abertas para receber você.
+              </p>
+            </div>
 
-        {locationText ? (
-          <p className="text-2xl font-bold text-balance md:text-3xl">
-            {locationText}
-          </p>
-        ) : null}
+            <hr className="border-slate-100" />
 
-        {phoneHref ? (
-          <div className="mt-6">
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white bg-transparent text-white hover:bg-white/10 hover:text-white"
-              nativeButton={false}
-              render={<a href={phoneHref} />}
+            {/* Informações de Contato */}
+            <div className="space-y-4">
+              {/* Endereço */}
+              <div className="flex items-start gap-3.5">
+                <div className="p-2.5 bg-red-50 text-brand-green rounded-lg shrink-0">
+                  <MapPin className="size-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold uppercase text-slate-400">
+                    Endereço
+                  </h4>
+                  <p className="text-sm font-medium text-slate-700 leading-snug mt-0.5">
+                    {resolvedAddress}
+                  </p>
+                </div>
+              </div>
+
+              {/* Horário */}
+              {openingHours && (
+                <div className="flex items-start gap-3.5">
+                  <div className="p-2.5 bg-red-50 text-brand-green rounded-lg shrink-0">
+                    <Clock className="size-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase text-slate-400">
+                      Funcionamento
+                    </h4>
+                    <p className="text-sm font-medium text-slate-700 mt-0.5">
+                      {openingHours}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Telefone */}
+              {displayPhone && (
+                <div className="flex items-start gap-3.5">
+                  <div className="p-2.5 bg-red-50 text-brand-green rounded-lg shrink-0">
+                    <Phone className="size-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase text-slate-400">
+                      Telefone / Contato
+                    </h4>
+                    <p className="text-sm font-medium text-slate-700 mt-0.5">
+                      {displayPhone}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Botões de Ação */}
+          <div className={`grid ${telHref ? "grid-cols-2" : "grid-cols-1"} gap-3 pt-4`}>
+            {telHref && (
+              <a
+                href={telHref}
+                className="flex items-center justify-center gap-2 bg-brand-orange text-white text-sm font-semibold py-3 px-4 rounded-xl hover:bg-brand-orange/80 transition-colors shadow-sm"
+              >
+                <Phone className="size-4" />
+                Ligar
+              </a>
+            )}
+
+            <a
+              href={mapsLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 border border-slate-300 bg-white text-slate-700 text-sm font-semibold py-3 px-4 rounded-xl hover:bg-slate-50 transition-colors"
             >
-              <Phone className="size-4" />
-              Ligar
-            </Button>
+              <ExternalLink className="size-4" />
+              Rotas
+            </a>
           </div>
-        ) : null}
+        </div>
 
-        {mapsUrl || whatsappHref ? (
-          <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            {mapsUrl ? (
-              <Button
-                size="lg"
-                className="bg-orange-500 text-white hover:bg-orange-600 [a]:hover:bg-orange-600"
-                nativeButton={false}
-                render={
-                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer" />
-                }
-              >
-                Google Maps
-              </Button>
-            ) : null}
-
-            {whatsappHref ? (
-              <Button
-                size="lg"
-                className="bg-[#25D366] text-white hover:bg-[#1ebe57] [a]:hover:bg-[#1ebe57]"
-                nativeButton={false}
-                render={
-                  <a
-                    href={whatsappHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  />
-                }
-              >
-                <WhatsAppIcon className="size-4" />
-                WhatsApp
-              </Button>
-            ) : null}
-          </div>
-        ) : null}
+        {/* Mapa Interativo (Coluna Direita) */}
+        <div className="lg:col-span-7 h-[380px] lg:h-auto min-h-[350px] rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+          <iframe
+            title="Localização no Google Maps"
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            loading="lazy"
+            allowFullScreen
+            referrerPolicy="no-referrer-when-downgrade"
+            src={mapEmbedUrl}
+          />
+        </div>
       </div>
     </section>
   );
 }
+
+export const LocationSection = WhereWeAreSection;
+export type LocationSectionProps = WhereWeAreSectionProps;

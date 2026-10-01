@@ -70,7 +70,7 @@ export default async function PublicLayout({
       <div className="min-w-0 flex-1">{children}</div>
       <FloatingSocialSidebar settings={settings} />
       <FloatingDonateButton />
-      <SiteFooter />
+      <SiteFooter settings={settings} />
     </div>
   );
 }

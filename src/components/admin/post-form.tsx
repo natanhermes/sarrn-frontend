@@ -274,7 +274,7 @@ export function PostForm({
                 </Select>
                 {statusLocked ? (
                   <FieldDescription>
-                    Contribuidor só pode salvar publicações como rascunho.
+                    Colaborador só pode salvar publicações como rascunho.
                   </FieldDescription>
                 ) : null}
                 {fieldState.invalid && (
