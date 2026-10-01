@@ -10,6 +10,7 @@ const CONTRIBUTOR_BLOCKED_PREFIXES = [
   "/dashboard/carousel",
   "/dashboard/pages",
   "/dashboard/funders",
+  "/dashboard/partners",
   "/dashboard/action-lines",
   "/dashboard/statistics",
 ] as const;

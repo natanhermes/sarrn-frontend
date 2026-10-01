@@ -116,6 +116,7 @@ export function CreateUserDialog({
                     {...field}
                     id="create-user-name"
                     placeholder="Nome completo"
+                    maxLength={150}
                     aria-invalid={fieldState.invalid}
                     disabled={mutation.isPending}
                   />
