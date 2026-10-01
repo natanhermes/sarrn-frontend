@@ -55,6 +55,22 @@ const nextConfig: NextConfig = {
       }
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/noticias/:slug",
+        destination: "/:slug",
+      },
+      {
+        source: "/projetos/:slug",
+        destination: "/:slug",
+      },
+      {
+        source: "/publicacoes/:slug",
+        destination: "/:slug",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

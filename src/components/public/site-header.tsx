@@ -1,11 +1,12 @@
 "use client";
 
-import { HeartHandshake, Menu, X } from "lucide-react";
+import { HeartHandshake, Menu, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { SarrnLogo } from "@/components/public/sarrn-logo";
+import { SearchModal } from "@/components/public/search-modal";
 import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
@@ -65,6 +66,19 @@ export function SiteHeader({
   const isHome = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Resolution logic: use explicit sar/transparencia arrays if provided, else fallback to menuItems
   const sarList: HeaderMenuItem[] =
@@ -109,7 +123,8 @@ export function SiteHeader({
   const solid = !isHome || isScrolled;
 
   return (
-    <header
+    <>
+      <header
         className={cn(
           "fixed inset-x-0 top-0 z-50 w-full transition-all duration-300",
           solid ? "bg-[#356e7c] py-4 shadow-md" : "bg-transparent py-6",
@@ -209,7 +224,18 @@ export function SiteHeader({
             </a>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="size-9 rounded-full text-white/90 hover:bg-white/10 hover:text-white transition-colors"
+              aria-label="Buscar publicações (Ctrl+K)"
+              onClick={() => setIsSearchOpen(true)}
+            >
+              <Search className="size-5" />
+            </Button>
+
             <Link
               href="/doar"
               className="hidden sm:flex shrink-0 whitespace-nowrap items-center gap-2 rounded-full bg-orange-500 px-4 py-2 xl:px-5 xl:py-2 text-xs font-bold text-white shadow-xl transition-all duration-300 hover:scale-105 hover:bg-orange-600 hover:shadow-2xl active:scale-95 xl:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
@@ -321,5 +347,8 @@ export function SiteHeader({
           </div>
         ) : null}
       </header>
+
+      <SearchModal open={isSearchOpen} onOpenChange={setIsSearchOpen} />
+    </>
   );
 }
