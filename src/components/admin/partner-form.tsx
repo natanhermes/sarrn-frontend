@@ -1,0 +1,258 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useMemo } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
+
+import { PatternFormat } from "react-number-format";
+
+import { CoverImageUpload } from "@/components/admin/cover-image-upload";
+import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  partnerFormSchema,
+  toPartnerSubmitPayload,
+  type PartnerFormValues,
+  type PartnerSubmitPayload,
+} from "@/schemas/partners";
+
+type PartnerFormProps = {
+  defaultValues?: Partial<PartnerFormValues>;
+  submitLabel: string;
+  onSubmit: (values: PartnerSubmitPayload) => Promise<void> | void;
+  isSubmitting?: boolean;
+};
+
+export function PartnerForm({
+  defaultValues,
+  submitLabel,
+  onSubmit,
+  isSubmitting = false,
+}: PartnerFormProps) {
+  const router = useRouter();
+
+  const initialStorageId = useMemo(
+    () => defaultValues?.storageId || crypto.randomUUID(),
+    [defaultValues?.storageId],
+  );
+
+  const form = useForm<PartnerFormValues>({
+    resolver: zodResolver(partnerFormSchema),
+    defaultValues: {
+      storageId: initialStorageId,
+      logoUrl: defaultValues?.logoUrl ?? "",
+      name: defaultValues?.name ?? "",
+      cnpj: defaultValues?.cnpj ?? "",
+      siteUrl: defaultValues?.siteUrl ?? "",
+      isActive: defaultValues?.isActive ?? true,
+      displayOrder: defaultValues?.displayOrder ?? 0,
+    },
+  });
+
+  const watchStorageId = useWatch({
+    control: form.control,
+    name: "storageId",
+  });
+  const currentStorageId = watchStorageId || initialStorageId;
+
+  async function handleSubmit(values: PartnerFormValues) {
+    await onSubmit(toPartnerSubmitPayload(values));
+  }
+
+  return (
+    <form
+      className="flex flex-col gap-6"
+      onSubmit={form.handleSubmit(handleSubmit)}
+    >
+      <FieldGroup>
+        <Controller
+          control={form.control}
+          name="logoUrl"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel>Logo (opcional)</FieldLabel>
+              <CoverImageUpload
+                value={field.value}
+                onChange={field.onChange}
+                disabled={isSubmitting}
+                emptyLabel="Nenhuma logo enviada"
+                storagePath={`parceiros/${currentStorageId}/logo`}
+              />
+              <FieldDescription>
+                Preferencialmente PNG ou SVG com fundo transparente.
+              </FieldDescription>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <Controller
+          control={form.control}
+          name="name"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="partner-name">Nome</FieldLabel>
+              <Input
+                id="partner-name"
+                placeholder="Nome do parceiro"
+                disabled={isSubmitting}
+                {...field}
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <Controller
+          control={form.control}
+          name="cnpj"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="partner-cnpj">CNPJ (opcional)</FieldLabel>
+              <PatternFormat
+                id="partner-cnpj"
+                customInput={Input}
+                format="##.###.###/####-##"
+                mask="_"
+                placeholder="00.000.000/0000-00"
+                disabled={isSubmitting}
+                value={field.value ?? ""}
+                onValueChange={(values) => {
+                  field.onChange(values.formattedValue);
+                }}
+                onBlur={field.onBlur}
+                getInputRef={field.ref}
+                aria-invalid={fieldState.invalid}
+              />
+              <FieldDescription>
+                CNPJ do parceiro institucional.
+              </FieldDescription>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <Controller
+          control={form.control}
+          name="siteUrl"
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="partner-site">Site (opcional)</FieldLabel>
+              <Input
+                id="partner-site"
+                placeholder="https://exemplo.org"
+                disabled={isSubmitting}
+                {...field}
+              />
+              <FieldDescription>
+                Se informado, a logo na Home abrirá este link em nova aba.
+              </FieldDescription>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Controller
+            control={form.control}
+            name="displayOrder"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="partner-order">Ordem</FieldLabel>
+                <Input
+                  id="partner-order"
+                  type="number"
+                  disabled={isSubmitting}
+                  value={field.value}
+                  onChange={(event) =>
+                    field.onChange(
+                      event.target.value === ""
+                        ? ""
+                        : Number(event.target.value),
+                    )
+                  }
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+                <FieldDescription>
+                  Menor número aparece primeiro na Home.
+                </FieldDescription>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            control={form.control}
+            name="isActive"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="partner-active">Status</FieldLabel>
+                <label
+                  htmlFor="partner-active"
+                  className="flex min-h-9 cursor-pointer items-center gap-3 rounded-lg border border-input px-3 py-2 text-sm"
+                >
+                  <input
+                    id="partner-active"
+                    type="checkbox"
+                    className="size-4 accent-primary"
+                    checked={field.value}
+                    onChange={(event) => field.onChange(event.target.checked)}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
+                    disabled={isSubmitting}
+                  />
+                  <span>
+                    {field.value ? "Ativo" : "Inativo"}
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {field.value
+                        ? "Visível na seção Parceiros da Home"
+                        : "Oculto da seção Parceiros da Home"}
+                    </span>
+                  </span>
+                </label>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+        </div>
+      </FieldGroup>
+
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isSubmitting}
+          onClick={() => router.push("/dashboard/partners")}
+        >
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <Loader2Icon className="size-4 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            submitLabel
+          )}
+        </Button>
+      </div>
+    </form>
+  );
+}

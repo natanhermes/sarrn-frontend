@@ -4,6 +4,7 @@ import { ActionLinesSection } from "@/components/public/action-lines-section";
 import { ApoiadoresSection } from "@/components/public/apoiadores-section";
 import { HeroCarousel } from "@/components/public/hero-carousel";
 import { NoticiasSection } from "@/components/public/noticias-section";
+import { ParceirosSection } from "@/components/public/parceiros-section";
 import { ProjetosSection } from "@/components/public/projetos-section";
 import { QuemSomos } from "@/components/public/quem-somos";
 import { SocialFeedSection } from "@/components/public/social-feed-section";
@@ -13,6 +14,7 @@ import {
   getPublicActionLines,
   getPublicCarouselSlides,
   getPublicFundersGrouped,
+  getPublicPartners,
   getPublicPosts,
   getPublicSiteSettings,
   getPublicSocialFeed,
@@ -32,6 +34,7 @@ export default async function HomePage() {
     news,
     carouselSlides,
     fundersGrouped,
+    partners,
     actionLines,
     settings,
     statistics,
@@ -42,6 +45,7 @@ export default async function HomePage() {
     getPublicPosts(["NEWS", "ARTICLE"], 5),
     getPublicCarouselSlides(),
     getPublicFundersGrouped(),
+    getPublicPartners(),
     getPublicActionLines(),
     getPublicSiteSettings(),
     getPublicStatistics(),
@@ -69,6 +73,7 @@ export default async function HomePage() {
       <ProjetosSection projects={projects} />
       <ActionLinesSection actionLines={actionLines} />
       <ApoiadoresSection fundersGrouped={fundersGrouped} />
+      <ParceirosSection partners={partners} />
       <WhereWeAreSection settings={settings} />
       <SocialFeedSection feed={socialFeed} />
     </main>

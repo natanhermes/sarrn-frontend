@@ -15,6 +15,7 @@ export const CACHE_TAGS = {
   actionLines: "action-lines",
   statistics: "statistics",
   funders: "funders",
+  partners: "partners",
   pages: "pages",
   settings: "settings",
   about: "about",

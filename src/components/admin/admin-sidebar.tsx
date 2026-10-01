@@ -72,6 +72,12 @@ const navItems: NavItem[] = [
     roles: ["ADMIN", "EDITOR"],
   },
   {
+    label: "Parceiros",
+    href: "/dashboard/partners",
+    icon: UsersIcon,
+    roles: ["ADMIN", "EDITOR"],
+  },
+  {
     label: "Linhas de Atuação",
     href: "/dashboard/action-lines",
     icon: LayersIcon,

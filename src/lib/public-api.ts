@@ -29,6 +29,10 @@ import {
   type FundersGrouped,
 } from "@/schemas/funders";
 import {
+  parsePartnersList,
+  type Partner,
+} from "@/schemas/partners";
+import {
   parseInstitutionalPage,
   parseInstitutionalPagesMenu,
   pathToMenuGroup,
@@ -59,6 +63,7 @@ export type PublicPost = AdminPost;
 export type PublicCarouselSlide = CarouselSlide;
 export type PublicFunder = Funder;
 export type PublicFundersGrouped = FundersGrouped;
+export type PublicPartner = Partner;
 export type PublicPostsPage = PostsPage;
 export type PublicActionLine = ActionLine;
 export type PublicActionLineSummary = ActionLineSummary;
@@ -130,8 +135,10 @@ function buildPublicPostsUrl(params: GetPublicPostsParams = {}) {
   }
 
   if (params.search?.trim()) {
-    url.searchParams.set("search", params.search.trim());
-    url.searchParams.set("query", params.search.trim());
+    const term = params.search.trim();
+    url.searchParams.set("search", term);
+    url.searchParams.set("q", term);
+    url.searchParams.set("query", term);
   }
 
   if (params.date?.trim()) {
@@ -196,15 +203,6 @@ export async function getPublicPostsPage(
       const dateB = new Date(b.publishedAt || b.createdAt || 0).getTime();
       return dateB - dateA;
     });
-
-    if (params.search?.trim()) {
-      const q = params.search.trim().toLowerCase();
-      page.content = page.content.filter(
-        (post) =>
-          post.title.toLowerCase().includes(q) ||
-          post.summary?.toLowerCase().includes(q),
-      );
-    }
 
     if (params.date?.trim()) {
       const targetDate = params.date.trim();
@@ -369,6 +367,49 @@ export async function getPublicFundersGrouped(): Promise<PublicFundersGrouped> {
     return parseFundersGrouped(payload);
   } catch {
     return { supporters: [], partners: [] };
+  }
+}
+
+function buildPublicPartnersUrl() {
+  const baseUrl = getApiBaseUrl();
+
+  if (!baseUrl) {
+    return null;
+  }
+
+  return `${baseUrl}/public/partners`;
+}
+
+export async function getPublicPartners(): Promise<PublicPartner[]> {
+  const endpoint = buildPublicPartnersUrl();
+
+  if (!endpoint) {
+    return [];
+  }
+
+  try {
+    const response = await fetch(endpoint, {
+      next: {
+        tags: [CACHE_TAGS.partners],
+      },
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const payload: unknown = await response.json();
+    const list = parsePartnersList(payload);
+    return list.sort((a, b) => {
+      if (a.displayOrder !== b.displayOrder) {
+        return a.displayOrder - b.displayOrder;
+      }
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
+  } catch {
+    return [];
   }
 }
 
